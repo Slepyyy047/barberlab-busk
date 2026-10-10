@@ -1,14 +1,14 @@
 import type { Metadata } from 'next';
 import Image from 'next/image';
 import ToolField from '@/components/ToolField';
-import { getContent } from '@/lib/store';
+import { getPublicContent as getContent } from '@/lib/public-content';
+import { createPageMetadata } from '@/lib/seo';
 import { PageHeading, Closing } from '@/components/Shared';
 
-export const metadata: Metadata = {
-  ...(process.env.BARBERLAB_PUBLIC_URL ? { alternates: { canonical: '/team' } } : {}),
-  title: 'Команда',
-  description: 'Команда BARBERLAB у Буську: майстри та онлайн-запис.',
-};
+export function generateMetadata(): Metadata {
+  const { settings } = getContent();
+  return createPageMetadata({ path: '/team', title: 'Команда', description: 'Познайомся з майстрами та обери зручний час для візиту.', settings });
+}
 
 export default function Team() {
   const { staff, settings } = getContent();

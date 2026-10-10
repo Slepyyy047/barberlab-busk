@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { checkLogin, createSession, SESSION_COOKIE } from '@/lib/auth';
 import { noStore, readJson, rejectCrossOrigin, RequestBodyTooLargeError } from '@/lib/http';
+import { logEvent } from '@/lib/observability';
 
 export const runtime = 'nodejs';
 export async function POST(request: NextRequest) {
@@ -20,6 +21,7 @@ export async function POST(request: NextRequest) {
   const result = checkLogin(values.username, values.password);
   if (!result.ok) return NextResponse.json({ error: result.limited ? 'Забагато спроб. Спробуйте через 15 хвилин.' : 'Неправильне ім’я або пароль.' }, { status: result.limited ? 429 : 401, headers: noStore });
   const session = createSession(values.username.trim());
+  logEvent('info', 'admin.login', { username: values.username.trim() });
   const response = NextResponse.json({ authenticated: true }, { headers: noStore });
   const secure = request.nextUrl.protocol === 'https:' || process.env.BARBERLAB_APP_ORIGIN?.startsWith('https://') === true;
   response.cookies.set(SESSION_COOKIE, session.token, { httpOnly: true, sameSite: 'strict', secure, path: '/', expires: new Date(session.expiresAt) });

@@ -4,6 +4,7 @@ import { randomUUID } from 'node:crypto';
 import sharp from 'sharp';
 import { NextResponse, type NextRequest } from 'next/server';
 import { isResponse, noStore, readBody, readJson, rejectCrossOrigin, requireAdminMutation, RequestBodyTooLargeError } from '@/lib/http';
+import { errorCode, isStorageError, logEvent } from '@/lib/observability';
 
 export const runtime = 'nodejs';
 const MAX_FILE_BYTES = 8 * 1024 * 1024;
@@ -42,9 +43,12 @@ export async function POST(request: NextRequest) {
     const output = await image.rotate().resize({ width: 2000, height: 2000, fit: 'inside', withoutEnlargement: true }).webp({ quality: 84 }).toBuffer();
     await mkdir(uploadDir, { recursive: true });
     await writeFile(path.join(uploadDir, filename), output, { flag: 'wx' });
+    logEvent('info', 'admin.media_uploaded', { username: authorization.username, filename });
     return NextResponse.json({ src: `/api/media/${filename}` }, { status: 201, headers: noStore });
-  } catch {
-    return NextResponse.json({ error: 'Не вдалося обробити зображення. Спробуйте інший файл.' }, { status: 400, headers: noStore });
+  } catch (error) {
+    logEvent('error', 'media.upload_failed', { code: errorCode(error) });
+    const unavailable = isStorageError(error);
+    return NextResponse.json({ error: unavailable ? 'Сховище тимчасово недоступне. Спробуйте пізніше.' : 'Не вдалося обробити зображення. Спробуйте інший файл.' }, { status: unavailable ? 503 : 400, headers: noStore });
   }
 }
 
@@ -67,9 +71,11 @@ export async function DELETE(request: NextRequest) {
     const filePath = path.join(uploadDir, path.basename(src));
     removeMediaReferences(src);
     await unlink(filePath);
+    logEvent('info', 'admin.media_deleted', { username: authorization.username, filename: path.basename(src) });
     return NextResponse.json({ removed: true }, { headers: noStore });
   } catch (error) {
     const missing = error && typeof error === 'object' && 'code' in error && (error as NodeJS.ErrnoException).code === 'ENOENT';
+    if (!missing) logEvent('error', 'media.delete_failed', { code: errorCode(error) });
     return NextResponse.json({ error: missing ? 'Зображення вже видалено.' : 'Не вдалося видалити зображення.' }, { status: missing ? 404 : 500, headers: noStore });
   }
 }

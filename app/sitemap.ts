@@ -1,2 +1,9 @@
-import type {MetadataRoute} from 'next';
-export default function sitemap():MetadataRoute.Sitemap{const url=process.env.BARBERLAB_PUBLIC_URL;if(!url)return [];return ['','/services','/team','/contacts'].map(p=>({url:url+p}))}
+import type { MetadataRoute } from 'next';
+import { getPublicOrigin } from '@/lib/seo';
+
+export const dynamic = 'force-dynamic';
+export default function sitemap(): MetadataRoute.Sitemap {
+  const origin = getPublicOrigin();
+  if (!origin) return [];
+  return ['/', '/services', '/team', '/contacts'].map(route => ({ url: new URL(route, origin).toString() }));
+}

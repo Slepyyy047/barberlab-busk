@@ -1,9 +1,16 @@
 import Link from 'next/link';
 import Image from 'next/image';
+import type { Metadata } from 'next';
 import ToolField from '@/components/ToolField';
 import BusinessData from '@/components/BusinessData';
-import { getContent } from '@/lib/store';
+import { getPublicContent as getContent } from '@/lib/public-content';
+import { createPageMetadata } from '@/lib/seo';
 import { Booking, Closing, SectionHeading, ServiceRows } from '@/components/Shared';
+
+export function generateMetadata(): Metadata {
+ const {settings}=getContent();
+ return createPageMetadata({settings,path:'/',title:'Барбершоп у Буську',description:'Чоловічі та дитячі стрижки, догляд за бородою й увага до деталей.',});
+}
 
 export default function Home() {
  const c=getContent(),s=c.settings;

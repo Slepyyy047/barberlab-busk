@@ -3,6 +3,7 @@ import { NextResponse, type NextRequest } from 'next/server';
 import { isResponse, noStore, readJson, rejectCrossOrigin, requireAdmin, requireAdminMutation, RequestBodyTooLargeError } from '@/lib/http';
 import { getContent, saveContent } from '@/lib/store';
 import { ContentValidationError } from '@/lib/validation';
+import { errorCode, logEvent } from '@/lib/observability';
 
 export const runtime = 'nodejs';
 export function GET(request: NextRequest) {
@@ -24,9 +25,11 @@ export async function PUT(request: NextRequest) {
   try {
     const saved = saveContent(body);
     revalidatePath('/', 'layout');
+    logEvent('info', 'admin.content_saved', { username: authorization.username });
     return NextResponse.json({ content: saved }, { headers: noStore });
   } catch (error) {
     if (error instanceof ContentValidationError) return NextResponse.json({ error: error.message }, { status: 400, headers: noStore });
+    logEvent('error', 'content.save_failed', { code: errorCode(error) });
     return NextResponse.json({ error: 'Не вдалося зберегти зміни. Спробуйте ще раз.' }, { status: 500, headers: noStore });
   }
 }

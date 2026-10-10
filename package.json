@@ -1,1 +1,32 @@
-{"name":"barberlab","version":"1.0.0","private":true,"scripts":{"dev":"next dev --hostname 127.0.0.1","build":"next build","start":"next start --hostname 127.0.0.1","typecheck":"tsc --noEmit","lint":"eslint .","admin:create":"tsx scripts/create-admin.mjs","test":"node --test tests/*.test.mjs","test:browser":"node tests/preview.mjs"},"dependencies":{"next":"16.4.0","react":"19.2.4","react-dom":"19.2.4","sharp":"^0.35.5"},"devDependencies":{"@playwright/test":"^1.58.0","@types/node":"^24.0.0","@types/react":"^19.2.0","@types/react-dom":"^19.2.0","eslint":"^9.0.0","eslint-config-next":"16.4.0","tsx":"^4.21.0","typescript":"^5.9.3"}}
+{
+  "name": "barberlab",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev --hostname 127.0.0.1",
+    "build": "next build",
+    "start": "next start --hostname 127.0.0.1",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "admin:create": "tsx scripts/create-admin.mjs",
+    "test": "node --test tests/*.test.mjs",
+    "test:browser": "node tests/preview.mjs",
+    "smoke": "node scripts/smoke.mjs"
+  },
+  "dependencies": {
+    "next": "16.4.0",
+    "react": "19.2.4",
+    "react-dom": "19.2.4",
+    "sharp": "^0.35.5"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.58.0",
+    "@types/node": "^24.0.0",
+    "@types/react": "^19.2.0",
+    "@types/react-dom": "^19.2.0",
+    "eslint": "^9.0.0",
+    "eslint-config-next": "16.4.0",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3"
+  }
+}
