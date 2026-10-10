@@ -15,6 +15,7 @@ let browser;
 let context;
 let page;
 let originalContent;
+let csrfToken;
 let accountCreated = false;
 let loggedIn = false;
 const uploadedSources = new Set();
@@ -76,7 +77,10 @@ try {
   assert.equal(loginResult.status(), 200, 'Disposable account login should succeed');
   await page.getByRole('navigation', { name: 'Розділи адмінпанелі' }).waitFor();
   const sessionResponse = await context.request.get(`${baseURL}/api/admin/session`);
-  assert.deepEqual(await sessionResponse.json().then((body) => body.authenticated), true, 'Admin session should be active');
+  const sessionData = await sessionResponse.json();
+  assert.equal(sessionData.authenticated, true, 'Admin session should be active');
+  assert.match(sessionData.csrfToken, /^[A-Za-z0-9_-]{43}$/, 'Authenticated session exposes a CSRF token');
+  csrfToken = sessionData.csrfToken;
   loggedIn = true;
   originalContent = await readServerContent();
   await writeFile(path.join(artifactDir, 'admin-e2e-snapshot.json'), JSON.stringify(originalContent, null, 2), 'utf8');
@@ -198,20 +202,20 @@ try {
 } finally {
   try {
     if (context && originalContent && loggedIn) {
-      const restore = await context.request.put(`${baseURL}/api/admin/content`, { data: originalContent, headers: { 'content-type': 'application/json', origin: baseURL } });
+      const restore = await context.request.put(`${baseURL}/api/admin/content`, { data: originalContent, headers: { 'content-type': 'application/json', origin: baseURL, 'x-csrf-token': csrfToken } });
       result.cleanup.contentRestoredInitial = restore.status() === 200;
       if (restore.status() !== 200) result.cleanup.restoreError = `${restore.status()} ${await restore.text()}`;
       for (const src of uploadedSources) {
         if (deletedSources.has(src)) continue;
-        const removed = await context.request.delete(`${baseURL}/api/admin/upload`, { data: { src }, headers: { 'content-type': 'application/json', origin: baseURL } });
+        const removed = await context.request.delete(`${baseURL}/api/admin/upload`, { data: { src }, headers: { 'content-type': 'application/json', origin: baseURL, 'x-csrf-token': csrfToken } });
         if (removed.status() === 200 || removed.status() === 404) deletedSources.add(src);
         else result.cleanup.mediaErrors = [...(result.cleanup.mediaErrors || []), `${src}: ${removed.status()} ${await removed.text()}`];
       }
-      const restoreAgain = await context.request.put(`${baseURL}/api/admin/content`, { data: originalContent, headers: { 'content-type': 'application/json', origin: baseURL } });
+      const restoreAgain = await context.request.put(`${baseURL}/api/admin/content`, { data: originalContent, headers: { 'content-type': 'application/json', origin: baseURL, 'x-csrf-token': csrfToken } });
       result.cleanup.contentRestoredAfterMediaCleanup = restoreAgain.status() === 200;
       if (restoreAgain.status() !== 200) result.cleanup.finalRestoreError = `${restoreAgain.status()} ${await restoreAgain.text()}`;
       if (loggedIn) {
-        const logout = await context.request.post(`${baseURL}/api/admin/logout`, { headers: { origin: baseURL } });
+        const logout = await context.request.post(`${baseURL}/api/admin/logout`, { headers: { origin: baseURL, 'x-csrf-token': csrfToken } });
         result.cleanup.sessionRevoked = logout.status() === 200;
       }
     }

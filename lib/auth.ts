@@ -5,7 +5,10 @@ import { getDatabase } from './store';
 export const SESSION_COOKIE = 'barberlab_admin';
 export const SESSION_TTL_SECONDS = 60 * 60 * 12;
 const SCRYPT_BYTES = 64;
-const loginAttempts = new Map<string, { count: number; resetAt: number }>();
+const LOGIN_WINDOW_MS = 15 * 60_000;
+const ACCOUNT_ATTEMPT_LIMIT = 10;
+const GLOBAL_ATTEMPT_LIMIT = 100;
+const DUMMY_PASSWORD_HASH = hashPassword('invalid-login-placeholder');
 
 export function hashPassword(password: string, salt = randomBytes(16).toString('hex')): string {
   return `${salt}:${scryptSync(password, salt, SCRYPT_BYTES).toString('hex')}`;
@@ -29,6 +32,7 @@ export function provisionAdmin(username: string, password: string): void {
     db.prepare('INSERT INTO admins (username, password_hash, created_at) VALUES (?, ?, ?) ON CONFLICT(username) DO UPDATE SET password_hash=excluded.password_hash')
       .run(cleanUsername, hashPassword(password), new Date().toISOString());
     db.prepare('DELETE FROM sessions WHERE username = ?').run(cleanUsername);
+    db.prepare('DELETE FROM login_limits WHERE key = ?').run(accountLimitKey(cleanUsername));
     db.exec('COMMIT');
   } catch (error) {
     db.exec('ROLLBACK');
@@ -37,6 +41,7 @@ export function provisionAdmin(username: string, password: string): void {
 }
 
 function digest(token: string): string { return createHash('sha256').update(token).digest('hex'); }
+function accountLimitKey(username: string): string { return `account:${digest(username.trim().toLowerCase())}`; }
 
 export function createSession(username: string): { token: string; expiresAt: number } {
   const token = randomBytes(32).toString('base64url');
@@ -59,33 +64,53 @@ export function deleteSession(request: NextRequest): void {
   if (token && token.length <= 128) getDatabase().prepare('DELETE FROM sessions WHERE token_hash = ?').run(digest(token));
 }
 
-export function checkLogin(username: string, password: string, address: string): { ok: true } | { ok: false; limited: boolean } {
+export function checkLogin(username: string, password: string): { ok: true } | { ok: false; limited: boolean } {
   const now = Date.now();
-  if (loginAttempts.size > 10_000) {
-    for (const [key, attempt] of loginAttempts) if (attempt.resetAt <= now) loginAttempts.delete(key);
-  }
-  const state = loginAttempts.get(address);
-  if (state && state.resetAt > now && state.count >= 10) return { ok: false, limited: true };
-  if (!state || state.resetAt <= now) loginAttempts.set(address, { count: 1, resetAt: now + 15 * 60_000 });
-  else state.count++;
   const db = getDatabase();
-  const user = db.prepare('SELECT username, password_hash FROM admins WHERE username = ?').get(username) as { username: string; password_hash: string } | undefined;
-  const hash = user?.password_hash ?? hashPassword('invalid-login-placeholder');
-  const valid = verifyPassword(password, hash) && Boolean(user);
-  if (valid) { loginAttempts.delete(address); return { ok: true }; }
-  return { ok: false, limited: false };
+  const cleanUsername = username.trim();
+  const accountKey = accountLimitKey(cleanUsername);
+  db.exec('BEGIN IMMEDIATE');
+  try {
+    db.prepare('DELETE FROM login_limits WHERE reset_at <= ?').run(now);
+    const readLimit = db.prepare('SELECT count FROM login_limits WHERE key = ?');
+    const account = readLimit.get(accountKey) as { count: number } | undefined;
+    const global = readLimit.get('global') as { count: number } | undefined;
+    if ((account?.count ?? 0) >= ACCOUNT_ATTEMPT_LIMIT || (global?.count ?? 0) >= GLOBAL_ATTEMPT_LIMIT) {
+      db.exec('COMMIT');
+      return { ok: false, limited: true };
+    }
+    const user = db.prepare('SELECT password_hash FROM admins WHERE username = ?').get(cleanUsername) as { password_hash: string } | undefined;
+    const valid = verifyPassword(password, user?.password_hash ?? DUMMY_PASSWORD_HASH) && Boolean(user);
+    if (valid) {
+      db.prepare('DELETE FROM login_limits WHERE key = ?').run(accountKey);
+      db.exec('COMMIT');
+      return { ok: true };
+    }
+    const increment = db.prepare('INSERT INTO login_limits (key, count, reset_at) VALUES (?, 1, ?) ON CONFLICT(key) DO UPDATE SET count = count + 1');
+    increment.run(accountKey, now + LOGIN_WINDOW_MS);
+    increment.run('global', now + LOGIN_WINDOW_MS);
+    db.exec('COMMIT');
+    return { ok: false, limited: false };
+  } catch (error) {
+    db.exec('ROLLBACK');
+    throw error;
+  }
 }
 
 export function hasSameOrigin(request: NextRequest): boolean {
   const origin = request.headers.get('origin');
-  if (!origin) return false;
+  if (!origin || origin === 'null') return false;
   try {
-    const suppliedOrigin = new URL(origin).origin;
-    const allowedOrigins = new Set([request.nextUrl.origin]);
-    const host = request.headers.get('host');
-    if (host) allowedOrigins.add(new URL(`${request.nextUrl.protocol}//${host}`).origin);
+    const suppliedOrigin = new URL(origin);
+    if (origin !== suppliedOrigin.origin) return false;
     const configuredOrigin = process.env.BARBERLAB_APP_ORIGIN;
-    if (configuredOrigin) allowedOrigins.add(new URL(configuredOrigin).origin);
-    return allowedOrigins.has(suppliedOrigin);
+    if (configuredOrigin) return suppliedOrigin.origin === new URL(configuredOrigin).origin;
+    const loopback = (host: string) => host === 'localhost' || host === '127.0.0.1' || host === '[::1]';
+    if (!loopback(request.nextUrl.hostname)) return false;
+    if (suppliedOrigin.origin === request.nextUrl.origin) return true;
+    const host = request.headers.get('host');
+    if (!host) return false;
+    const hostOrigin = new URL(`${request.nextUrl.protocol}//${host}`);
+    return loopback(hostOrigin.hostname) && hostOrigin.port === request.nextUrl.port && suppliedOrigin.origin === hostOrigin.origin;
   } catch { return false; }
 }

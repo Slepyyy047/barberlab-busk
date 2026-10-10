@@ -18,6 +18,8 @@ try {
     CREATE TABLE IF NOT EXISTS admins (username TEXT PRIMARY KEY, password_hash TEXT NOT NULL, created_at TEXT NOT NULL);
     CREATE TABLE IF NOT EXISTS sessions (token_hash TEXT PRIMARY KEY, username TEXT NOT NULL REFERENCES admins(username) ON DELETE CASCADE, expires_at INTEGER NOT NULL);
     CREATE INDEX IF NOT EXISTS sessions_expiry ON sessions(expires_at);
+    CREATE TABLE IF NOT EXISTS login_limits (key TEXT PRIMARY KEY, count INTEGER NOT NULL, reset_at INTEGER NOT NULL);
+    CREATE INDEX IF NOT EXISTS login_limits_expiry ON login_limits(reset_at);
   `);
   db.prepare('DELETE FROM sessions WHERE expires_at <= ?').run(Date.now());
   db.prepare('INSERT OR IGNORE INTO content (id, json, updated_at) VALUES (1, ?, ?)').run(JSON.stringify(seedContent), new Date().toISOString());

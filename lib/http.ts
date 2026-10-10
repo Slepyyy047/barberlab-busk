@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { getSession, hasSameOrigin } from './auth';
+import { hasValidCsrfToken } from './csrf';
 
 export const noStore = { 'Cache-Control': 'no-store, max-age=0' };
 export function rejectCrossOrigin(request: NextRequest): NextResponse | null {
@@ -8,6 +9,12 @@ export function rejectCrossOrigin(request: NextRequest): NextResponse | null {
 export function requireAdmin(request: NextRequest): { username: string } | NextResponse {
   const username = getSession(request);
   return username ? { username } : NextResponse.json({ error: 'Потрібно увійти до панелі керування.' }, { status: 401, headers: noStore });
+}
+export function requireAdminMutation(request: NextRequest): { username: string } | NextResponse {
+  const username = getSession(request);
+  if (!username) return NextResponse.json({ error: 'Потрібно увійти до панелі керування.' }, { status: 401, headers: noStore });
+  if (!hasValidCsrfToken(request)) return NextResponse.json({ error: 'Захисний токен відсутній або недійсний. Оновіть сторінку та спробуйте ще раз.' }, { status: 403, headers: noStore });
+  return { username };
 }
 export function isResponse(value: unknown): value is NextResponse { return value instanceof NextResponse; }
 export class RequestBodyTooLargeError extends Error {

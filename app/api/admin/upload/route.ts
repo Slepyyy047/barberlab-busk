@@ -3,7 +3,7 @@ import path from 'node:path';
 import { randomUUID } from 'node:crypto';
 import sharp from 'sharp';
 import { NextResponse, type NextRequest } from 'next/server';
-import { isResponse, noStore, readBody, readJson, rejectCrossOrigin, requireAdmin, RequestBodyTooLargeError } from '@/lib/http';
+import { isResponse, noStore, readBody, readJson, rejectCrossOrigin, requireAdminMutation, RequestBodyTooLargeError } from '@/lib/http';
 
 export const runtime = 'nodejs';
 const MAX_FILE_BYTES = 8 * 1024 * 1024;
@@ -13,7 +13,7 @@ const uploadDir = path.resolve(process.env.BARBERLAB_DATA_DIR || path.join(proce
 export async function POST(request: NextRequest) {
   const crossOrigin = rejectCrossOrigin(request);
   if (crossOrigin) return crossOrigin;
-  const authorization = requireAdmin(request);
+  const authorization = requireAdminMutation(request);
   if (isResponse(authorization)) return authorization;
   let form: FormData;
   try {
@@ -51,7 +51,7 @@ export async function POST(request: NextRequest) {
 export async function DELETE(request: NextRequest) {
   const crossOrigin = rejectCrossOrigin(request);
   if (crossOrigin) return crossOrigin;
-  const authorization = requireAdmin(request);
+  const authorization = requireAdminMutation(request);
   if (isResponse(authorization)) return authorization;
   let body: unknown;
   try { body = await readJson(request, 10_000); }

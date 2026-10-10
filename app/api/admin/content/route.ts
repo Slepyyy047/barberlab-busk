@@ -1,6 +1,6 @@
 import { revalidatePath } from 'next/cache';
 import { NextResponse, type NextRequest } from 'next/server';
-import { isResponse, noStore, readJson, rejectCrossOrigin, requireAdmin, RequestBodyTooLargeError } from '@/lib/http';
+import { isResponse, noStore, readJson, rejectCrossOrigin, requireAdmin, requireAdminMutation, RequestBodyTooLargeError } from '@/lib/http';
 import { getContent, saveContent } from '@/lib/store';
 import { ContentValidationError } from '@/lib/validation';
 
@@ -13,7 +13,7 @@ export function GET(request: NextRequest) {
 export async function PUT(request: NextRequest) {
   const crossOrigin = rejectCrossOrigin(request);
   if (crossOrigin) return crossOrigin;
-  const authorization = requireAdmin(request);
+  const authorization = requireAdminMutation(request);
   if (isResponse(authorization)) return authorization;
   let body: unknown;
   try { body = await readJson(request); }

@@ -73,18 +73,24 @@ try {
   const admin = isolated ? await desktop.context().request : null;
   let original;
   let fixtureSrc;
+  let csrfToken;
   if (isolated) {
     const username = process.env.BARBERLAB_ADMIN_USER;
     const password = process.env.BARBERLAB_ADMIN_PASSWORD;
     const login = await admin.post(`${origin}/api/admin/login`, { data: { username, password }, headers: { origin } });
     assert.equal(login.status(), 200, 'isolated CMS user can sign in');
+    const session = await admin.get(`${origin}/api/admin/session`);
+    const sessionData = await session.json();
+    assert.equal(sessionData.authenticated, true, 'isolated CMS session is authenticated');
+    assert.match(sessionData.csrfToken, /^[A-Za-z0-9_-]{43}$/, 'isolated CMS session exposes a CSRF token');
+    csrfToken = sessionData.csrfToken;
     const response = await admin.get(`${origin}/api/admin/content`);
     assert.equal(response.status(), 200);
     original = await response.json();
     const fixtureBytes = await (await import('node:fs/promises')).readFile(path.join(process.cwd(), 'public', 'logo-source.png'));
     const form = new FormData();
     form.append('file', new Blob([fixtureBytes], { type: 'image/png' }), 'qa-portrait-and-gallery.png');
-    const upload = await admin.post(`${origin}/api/admin/upload`, { multipart: form, headers: { origin } });
+    const upload = await admin.post(`${origin}/api/admin/upload`, { multipart: form, headers: { origin, 'x-csrf-token': csrfToken } });
     assert.equal(upload.status(), 201, `isolated image fixture upload: ${await upload.text()}`);
     fixtureSrc = (await upload.json()).src;
   }
@@ -120,7 +126,7 @@ try {
 
   if (isolated) {
     const save = async (content) => {
-      const response = await admin.put(`${origin}/api/admin/content`, { data: content, headers: { origin } });
+      const response = await admin.put(`${origin}/api/admin/content`, { data: content, headers: { origin, 'x-csrf-token': csrfToken } });
       assert.equal(response.status(), 200, `isolated CMS save: ${response.status()} ${await response.text()}`);
       return (await response.json()).content;
     };
@@ -210,7 +216,7 @@ try {
     const retainedResponse = await admin.get(`${origin}/api/admin/content`);
     const retained = await retainedResponse.json();
     assert.ok(retained.gallery.some(image => image.src === src), 'gallery redirect preserves CMS media');
-    const deleteFixture = await admin.delete(`${origin}/api/admin/upload`, { data: { src }, headers: { origin } });
+    const deleteFixture = await admin.delete(`${origin}/api/admin/upload`, { data: { src }, headers: { origin, 'x-csrf-token': csrfToken } });
     assert.ok(deleteFixture.status() === 200 || deleteFixture.status() === 404, 'isolated gallery upload is removed');
     record('hidden gallery retains CMS content and fixture cleanup', { fixtureRemoved: deleteFixture.status() === 200 });
     await save(original);

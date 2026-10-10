@@ -17,12 +17,11 @@ export async function POST(request: NextRequest) {
   if (typeof values.username !== 'string' || typeof values.password !== 'string' || values.username.length > 80 || values.password.length > 256) {
     return NextResponse.json({ error: 'Перевірте ім’я та пароль.' }, { status: 400, headers: noStore });
   }
-  const forwarded = request.headers.get('x-forwarded-for')?.split(',').map((part) => part.trim()).filter(Boolean);
-  const address = forwarded?.at(-1) || 'unknown';
-  const result = checkLogin(values.username, values.password, address);
+  const result = checkLogin(values.username, values.password);
   if (!result.ok) return NextResponse.json({ error: result.limited ? 'Забагато спроб. Спробуйте через 15 хвилин.' : 'Неправильне ім’я або пароль.' }, { status: result.limited ? 429 : 401, headers: noStore });
   const session = createSession(values.username.trim());
   const response = NextResponse.json({ authenticated: true }, { headers: noStore });
-  response.cookies.set(SESSION_COOKIE, session.token, { httpOnly: true, sameSite: 'strict', secure: request.nextUrl.protocol === 'https:', path: '/', expires: new Date(session.expiresAt) });
+  const secure = request.nextUrl.protocol === 'https:' || process.env.BARBERLAB_APP_ORIGIN?.startsWith('https://') === true;
+  response.cookies.set(SESSION_COOKIE, session.token, { httpOnly: true, sameSite: 'strict', secure, path: '/', expires: new Date(session.expiresAt) });
   return response;
 }

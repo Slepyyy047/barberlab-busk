@@ -32,6 +32,7 @@ export default function AdminPanel() {
   const [contentLoading, setContentLoading] = useState(false);
   const [contentReady, setContentReady] = useState(false);
   const [username, setUsername] = useState('');
+  const [csrfToken, setCsrfToken] = useState('');
   const [password, setPassword] = useState('');
   const [content, setContent] = useState<Content>(emptyContent);
   const [savedContent, setSavedContent] = useState<Content>(emptyContent);
@@ -62,11 +63,12 @@ export default function AdminPanel() {
     fetch('/api/admin/session', { cache: 'no-store' })
       .then(async (response) => {
         if (!response.ok) return { authenticated: false };
-        return response.json() as Promise<{ authenticated: boolean }>;
+        return response.json() as Promise<{ authenticated: boolean; csrfToken?: string }>;
       })
-      .then(async ({ authenticated: isAuthenticated }) => {
+      .then(async ({ authenticated: isAuthenticated, csrfToken: token }) => {
         if (!active) return;
         setAuthenticated(isAuthenticated);
+        setCsrfToken(token ?? '');
         if (isAuthenticated) {
           try { await loadContent(); }
           catch (error) { setNotice({ kind: 'error', text: error instanceof Error ? error.message : 'Не вдалося завантажити дані.' }); }
@@ -102,8 +104,9 @@ export default function AdminPanel() {
       });
       if (!response.ok) throw new Error(await responseError(response));
       const session = await fetch('/api/admin/session', { cache: 'no-store' });
-      const result = await session.json() as { authenticated: boolean };
-      if (!result.authenticated) throw new Error('Сесію не створено. Перевірте облікові дані.');
+      const result = await session.json() as { authenticated: boolean; csrfToken?: string };
+      if (!result.authenticated || !result.csrfToken) throw new Error('Сесію не створено. Перевірте облікові дані.');
+      setCsrfToken(result.csrfToken);
       setAuthenticated(true); setPassword('');
       await loadContent();
       setNotice({ kind: 'success', text: 'Вхід виконано.' });
@@ -115,9 +118,9 @@ export default function AdminPanel() {
     if (dirty && !window.confirm('Є незбережені зміни. Вийти без збереження?')) return;
     setBusy(true); setNotice(null);
     try {
-      const response = await fetch('/api/admin/logout', { method: 'POST' });
+      const response = await fetch('/api/admin/logout', { method: 'POST', headers: { 'X-CSRF-Token': csrfToken } });
       if (!response.ok) throw new Error(await responseError(response));
-      setAuthenticated(false); setContent(emptyContent); setSavedContent(emptyContent);
+      setAuthenticated(false); setCsrfToken(''); setContent(emptyContent); setSavedContent(emptyContent);
       setNotice({ kind: 'success', text: 'Ви вийшли з адмінпанелі.' });
     } catch (error) { setNotice({ kind: 'error', text: error instanceof Error ? error.message : 'Не вдалося завершити сесію.' }); }
     finally { setBusy(false); }
@@ -130,7 +133,7 @@ export default function AdminPanel() {
     setBusy(true); setNotice(null);
     try {
       const response = await fetch('/api/admin/content', {
-        method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(content),
+        method: 'PUT', headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken }, body: JSON.stringify(content),
       });
       if (!response.ok) throw new Error(await responseError(response));
       const result = await response.json().catch(() => null) as Content | { content?: Content } | null;
@@ -145,7 +148,7 @@ export default function AdminPanel() {
     setUploading(true); setNotice(null);
     try {
       const body = new FormData(); body.append('file', file);
-      const response = await fetch('/api/admin/upload', { method: 'POST', body });
+      const response = await fetch('/api/admin/upload', { method: 'POST', headers: { 'X-CSRF-Token': csrfToken }, body });
       if (!response.ok) throw new Error(await responseError(response));
       const result = await response.json() as { src: string };
       if (!result.src) throw new Error('Сервер не повернув адресу файлу.');
@@ -166,7 +169,7 @@ export default function AdminPanel() {
     setBusy(true); setNotice(null);
     try {
       const response = await fetch('/api/admin/upload', {
-        method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ src }),
+        method: 'DELETE', headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken }, body: JSON.stringify({ src }),
       });
       if (!response.ok) throw new Error(await responseError(response));
       const removeReferences = (previous: Content) => ({
