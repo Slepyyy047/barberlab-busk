@@ -1,0 +1,10 @@
+node_modules/
+.next/
+data/
+.env*
+!.env.example
+test-results/
+verification/
+work/
+AGENTS.md
+*.tsbuildinfo

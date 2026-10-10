@@ -1,20 +1,20 @@
-# BARBERLAB · локальний сайт для презентації власникам
+# BARBERLAB — барбершоп у Буську
 
-Український сайт: головна, послуги, команда, галерея, про нас, контакти та захищена адмінпанель. Next.js 16, React, TypeScript. SQLite і фотографії зберігаються на серверному диску; браузерне сховище не використовується як база даних.
+Український сайт: головна, послуги, команда, контакти та захищена адмінпанель. Next.js 16, React, TypeScript. SQLite і фотографії зберігаються на серверному диску; браузерне сховище не використовується як база даних.
 
 ## Запуск на Windows
 
 Потрібен Node.js 24 LTS та npm. У PowerShell:
 
 ```powershell
-cd "C:\Users\Danylo\Documents\Codex\2026-10-09\files-mentioned-by-the-user-codex\outputs\barberlab"
+cd barberlab-busk
 npm ci
 npm exec tsx scripts/import-portraits.mjs
 npm run build
 npm run start
 ```
 
-Сайт: http://127.0.0.1:3000. Поточний перегляд уже запущений. Щоб запустити власний сервер на цьому порту, спочатку зупиніть попередній процес через Ctrl+C. Для розробки: `npm run dev`.
+Сайт: http://127.0.0.1:3000. Для розробки: `npm run dev`.
 
 ## Безпечний доступ до адміністрації
 
@@ -76,5 +76,4 @@ node tests/reference-browser.mjs
 - Next.js і React — MIT; sharp — Apache-2.0. Ліцензії залежностей у їхніх пакетах.
 - Manrope та Oswald — SIL Open Font License 1.1. Шрифти з Google Fonts збережено локально; тексти ліцензій у `public/fonts/`. Сайт не звертається до Google Fonts під час перегляду.
 - Карта Google завантажується лише після натискання «Показати карту»; соціальні мережі та Altegio — звичайні зовнішні посилання. Трекерів немає.
-
 
