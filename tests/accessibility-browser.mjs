@@ -212,8 +212,10 @@ async function main() {
     await page.getByRole('button', { name: 'Зберегти вибір' }).click();
     assert.equal(await page.evaluate(() => JSON.parse(localStorage.getItem('barberlab_cookie_preferences') || '{}').externalMedia), true, 'map consent is persisted');
     await page.route('https://maps.google.com/**', (route) => route.fulfill({ contentType: 'text/html', body: '<p>Map test fixture</p>' }));
+    const mapRequest = page.waitForRequest(request => new URL(request.url()).hostname === 'maps.google.com');
     await page.getByRole('button', { name: 'Показати карту' }).click();
     await page.locator('.map-panel iframe').waitFor();
+    await mapRequest;
     assert.ok(googleMapRequests.length > 0, 'map request is made only after consent and explicit activation');
     await page.getByRole('button', { name: 'Налаштування cookie' }).click();
     const consentCheckbox = page.getByRole('checkbox', { name: /Зовнішній контент/ });
