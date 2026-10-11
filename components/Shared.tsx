@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import type { Service, Settings } from '@/lib/types';
+import { CookieSettingsButton, MotionToggle } from './CookiePreferences';
 
 export function Booking({settings,label='Записатися',light=false}:{settings:Settings,label?:string,light?:boolean}) {
  return <a className={`button ${light?'button-light':''}`} href={settings.bookingUrl} target="_blank" rel="noopener noreferrer">{label}<span className="link-arrow" aria-hidden="true">↗</span></a>;
@@ -23,7 +24,7 @@ export function Closing({settings}:{settings:Settings}) {
  return <section className="closing"><div className="container closing-inner" data-reveal><div><p className="eyebrow">ПОБАЧИМОСЯ У КРІСЛІ</p><h2>Твій час.<br/><span>Твій BARBERLAB.</span></h2></div><Booking settings={settings} label="Обрати свій час" light/></div></section>;
 }
 export function Footer({settings}:{settings:Settings}) {
- return <footer className="site-footer"><div className="container footer-top"><div><Link href="/" className="wordmark" aria-label="BARBERLAB — головна"><span className="logo-crop"><Image src="/logo-hd.png" alt="BARBERLAB" width={1983} height={793} unoptimized/></span></Link><p>{settings.descriptor}</p></div><div><p className="eyebrow">ЗАВІТАЙ</p><p>{settings.address}</p><a href={settings.phoneLink}>{settings.phone}</a></div><div><p className="eyebrow">МИ НА ЗВ’ЯЗКУ</p>{[["Instagram",settings.instagram],["TikTok",settings.tiktok],["Facebook",settings.facebook]].filter(([,url])=>url).map(([label,url])=><a key={label} href={url} target="_blank" rel="noopener noreferrer">{label} <span className="link-arrow" aria-hidden="true">↗</span></a>)}</div></div><div className="container footer-bottom"><span>© {new Date().getFullYear()} BARBERLAB</span><span>Стиль починається з деталей.</span></div></footer>;
+ return <footer className="site-footer"><div className="container footer-top"><div><Link href="/" className="wordmark" aria-label="BARBERLAB — головна"><span className="logo-crop"><Image src="/logo-hd.png" alt="BARBERLAB" width={1983} height={793} unoptimized/></span></Link><p>{settings.descriptor}</p></div><div><p className="eyebrow">ЗАВІТАЙ</p><p>{settings.address}</p><a href={settings.phoneLink}>{settings.phone}</a></div><div><p className="eyebrow">МИ НА ЗВ’ЯЗКУ</p>{[["Instagram",settings.instagram],["TikTok",settings.tiktok],["Facebook",settings.facebook]].filter(([,url])=>url).map(([label,url])=><a key={label} href={url} target="_blank" rel="noopener noreferrer">{label} <span className="link-arrow" aria-hidden="true">↗</span></a>)}</div></div><nav className="container footer-legal" aria-label="Правова інформація та налаштування"><Link href="/privacy">Конфіденційність</Link><Link href="/terms">Умови використання</Link><Link href="/cookies">Використання cookie</Link><Link href="/licenses">Ліцензії та матеріали</Link><CookieSettingsButton/><MotionToggle/></nav><div className="container footer-bottom"><span>© {new Date().getFullYear()} BARBERLAB</span><span>Стиль починається з деталей.</span></div></footer>;
 }
 
 

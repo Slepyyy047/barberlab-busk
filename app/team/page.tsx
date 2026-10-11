@@ -40,7 +40,7 @@ export default function Team() {
                 {person.portrait ? (
                   <Image
                     src={person.portrait}
-                    alt={person.name}
+                    alt={`Портрет: ${person.name}`}
                     width={700}
                     height={875}
                     unoptimized

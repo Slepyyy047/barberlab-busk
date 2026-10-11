@@ -34,7 +34,7 @@ export async function runSmoke(baseUrl) {
   assert.match(health.headers.get('cache-control') ?? '', /no-store/i, 'health response is not cached');
   checks.push({ name: 'health', status: health.status, body: healthBody });
 
-  for (const route of ['/', '/services', '/team', '/contacts']) {
+  for (const route of ['/', '/services', '/team', '/contacts', '/privacy', '/terms', '/cookies', '/licenses']) {
     const response = await request(baseUrl, route);
     assert.equal(response.status, 200, `${route} returned HTTP ${response.status}`);
     assert.match(response.headers.get('content-type') ?? '', /text\/html/i, `${route} returned HTML`);

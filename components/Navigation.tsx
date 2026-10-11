@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 const links = [
   ['/#experience', 'Атмосфера'],
@@ -20,6 +20,8 @@ export default function Navigation({ bookingUrl }: { bookingUrl: string }) {
   const [mobile, setMobile] = useState(false);
   const [activeSection, setActiveSection] = useState('');
   const [scrolled, setScrolled] = useState(false);
+  const navRef = useRef<HTMLElement>(null);
+  const toggleRef = useRef<HTMLButtonElement>(null);
   const open = openPath === path;
   const menuIsClosed = mobile && !open;
 
@@ -36,8 +38,22 @@ export default function Navigation({ bookingUrl }: { bookingUrl: string }) {
 
   const closeAndFocusToggle = useCallback(() => {
     setOpenPath(null);
-    document.querySelector<HTMLButtonElement>('.menu-toggle')?.focus();
+    toggleRef.current?.focus();
   }, []);
+
+  useEffect(() => {
+    if (!open || !mobile) return;
+    let secondFrame = 0;
+    const firstFrame = window.requestAnimationFrame(() => {
+      secondFrame = window.requestAnimationFrame(() => {
+        navRef.current?.querySelector<HTMLAnchorElement>('a')?.focus();
+      });
+    });
+    return () => {
+      window.cancelAnimationFrame(firstFrame);
+      window.cancelAnimationFrame(secondFrame);
+    };
+  }, [mobile, open]);
 
   useEffect(() => {
     if (!open || !mobile) return;
@@ -81,6 +97,7 @@ export default function Navigation({ bookingUrl }: { bookingUrl: string }) {
           <small>БАРБЕРШОП У БУСЬКУ</small>
         </Link>
         <nav
+          ref={navRef}
           id="primary-nav"
           aria-label="Основна навігація"
           aria-hidden={menuIsClosed}
@@ -105,6 +122,7 @@ export default function Navigation({ bookingUrl }: { bookingUrl: string }) {
           Записатися
         </a>
         <button
+          ref={toggleRef}
           className="menu-toggle"
           type="button"
           aria-controls="primary-nav"

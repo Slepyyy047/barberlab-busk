@@ -1,0 +1,38 @@
+/* Keep the supplied charcoal and copper palette; raise metadata contrast only. */
+.kinetic-caption > span,
+.experience-stage-caption,
+.row-number,
+.small-note,
+.home-person small,
+.review-rating strong span,
+.review-rating small,
+.review-grid cite,
+.person-index,
+.team-level,
+.team-card--no-portrait .team-portrait,
+.about-points p {
+  color: #c0b5ad;
+}
+
+.contact-details h2 { color: #c9b7a9; }
+
+/* Keyboard focus remains distinct over both dark public surfaces and the light CMS. */
+:focus-visible {
+  outline: 3px solid #f0a778;
+  outline-offset: 4px;
+}
+
+.admin-shell :focus-visible {
+  outline-color: #303f66;
+}
+
+@media (max-width: 780px) {
+  .menu-toggle { width: 44px; min-width: 44px; min-height: 44px; }
+}
+
+.nav-links a { display: inline-flex; align-items: center; min-height: 44px; }
+
+/* Small CMS indices and badges were the remaining low-contrast text on pale cards. */
+.admin-shell .admin-nav-item > span,
+.admin-shell .admin-order { color: #595959; }
+.admin-shell .admin-chip.muted { color: #565656; }

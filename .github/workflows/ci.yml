@@ -50,3 +50,9 @@ jobs:
 
       - name: Start production app and run smoke checks
         run: npm run smoke
+
+      - name: Install Chromium for browser checks
+        run: npx playwright install --with-deps chromium
+
+      - name: Check accessibility and cookie preferences
+        run: npm run test:accessibility
