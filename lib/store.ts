@@ -2,12 +2,15 @@ import { mkdirSync } from 'node:fs';
 import path from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
 import { seedContent } from './seed';
+import hostedContent from './hosted-content.json';
 import type { Content } from './types';
 import { validateContent } from './validation';
 
+const hosted = Boolean(process.env.VERCEL);
 const dataDir = path.resolve(/* turbopackIgnore: true */ process.env.BARBERLAB_DATA_DIR || path.join(process.cwd(), 'data'));
-mkdirSync(dataDir, { recursive: true });
-const db = new DatabaseSync(path.join(dataDir, 'barberlab.sqlite'));
+if (!hosted) mkdirSync(dataDir, { recursive: true });
+const db = hosted ? null : new DatabaseSync(path.join(dataDir, 'barberlab.sqlite'));
+if (db) {
 // Set this before journal-mode changes and schema creation so concurrent app workers wait on SQLite locks.
 db.exec('PRAGMA busy_timeout = 10000;');
 db.exec('PRAGMA journal_mode = WAL; PRAGMA foreign_keys = ON;');
@@ -28,11 +31,18 @@ try {
   db.exec('ROLLBACK;');
   throw error;
 }
+}
 
-export function getDatabase(): DatabaseSync { return db; }
+function writableDatabase(): DatabaseSync {
+  if (!db) throw new Error('Admin storage is unavailable on this host.');
+  return db;
+}
+
+export function getDatabase(): DatabaseSync { return writableDatabase(); }
 
 export function getContent(): Content {
-  const row = db.prepare('SELECT json FROM content WHERE id = 1').get() as { json: string } | undefined;
+  if (hosted) return validateContent(hostedContent);
+  const row = writableDatabase().prepare('SELECT json FROM content WHERE id = 1').get() as { json: string } | undefined;
   if (!row) throw new Error('Сховище вмісту не ініціалізовано.');
   const parsed: unknown = JSON.parse(row.json);
   return validateContent(parsed);
@@ -40,7 +50,7 @@ export function getContent(): Content {
 
 export function saveContent(input: unknown): Content {
   const content = validateContent(input);
-  db.prepare('INSERT INTO content (id, json, updated_at) VALUES (1, ?, ?) ON CONFLICT(id) DO UPDATE SET json=excluded.json, updated_at=excluded.updated_at')
+  writableDatabase().prepare('INSERT INTO content (id, json, updated_at) VALUES (1, ?, ?) ON CONFLICT(id) DO UPDATE SET json=excluded.json, updated_at=excluded.updated_at')
     .run(JSON.stringify(content), new Date().toISOString());
   return content;
 }

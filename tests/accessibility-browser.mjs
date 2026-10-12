@@ -132,16 +132,200 @@ async function main() {
   try {
     await waitForServer(baseURL, child, () => output);
     browser = await chromium.launch({ ...(process.platform === 'win32' ? { channel: 'msedge' } : {}), headless: true });
+    const desktopContext = await browser.newContext({ viewport: { width: 1440, height: 1000 } });
+    const desktopPage = await desktopContext.newPage();
+    const desktopErrors = [];
+    desktopPage.on('pageerror', (error) => desktopErrors.push(error.message));
+    await desktopPage.goto(baseURL, { waitUntil: 'networkidle' });
+    await desktopPage.waitForFunction(() => getComputedStyle(document.querySelector('.cut-word-text')).opacity === '1');
+    const expectedReviews = [
+      'Якість послуг і відношення до клієнтів на висоті. Рекомендую.',
+      'Стабільно раз в два тижні відвідую даний барбершоп! Без різниці можу записатись до будь-якого майстра і залишаюсь завжди задоволений! Рекомендую!',
+      'Прийшов в барбершоп, скинув кілька лишніх років) найдешевший спосіб омолодження! Щира рекомендація!',
+    ];
+    const readReviews = async (page, expectedColumns, label) => {
+      const grid = page.locator('.review-stories__grid');
+      const layout = await grid.evaluate((element) => ({
+        columns: getComputedStyle(element).gridTemplateColumns.split(' ').length,
+        horizontalOverflow: element.scrollWidth > element.clientWidth,
+        reviews: Array.from(element.querySelectorAll('[data-review-slide]')).map((card) => {
+          const paragraph = card.querySelector('blockquote p');
+          return {
+            text: paragraph.textContent,
+            clipped: paragraph.scrollHeight > paragraph.clientHeight,
+            cardOverflow: card.scrollWidth > card.clientWidth,
+          };
+        }),
+      }));
+      assert.equal(layout.columns, expectedColumns, `${label} review cards use the expected grid columns`);
+      assert.equal(layout.horizontalOverflow, false, `${label} reviews have no horizontal overflow`);
+      assert.deepEqual(layout.reviews.map((review) => review.text), expectedReviews, `${label} displays every full CMS review string`);
+      assert.ok(layout.reviews.every((review) => !review.clipped && !review.cardOverflow), `${label} review text fits each card without clipping`);
+    };
+    await readReviews(desktopPage, 3, 'desktop');
+    await desktopPage.getByRole('heading', { name: 'Чоловічі стрижки. Догляд за бородою.' }).waitFor();
+    await assertNoHorizontalOverflow(desktopPage, 'home at 1440px');
+    assert.equal(await desktopPage.locator('.cut-hero img[src*="generated"]').count(), 0, 'homepage hero contains no generated images');
+    assert.equal(await desktopPage.locator('.tool-field').count(), 0, 'homepage has no generated barber-tool fields');
+    const desktopShotDir = path.join(repoRoot, 'verification', 'accessibility');
+    await mkdir(desktopShotDir, { recursive: true });
+    const desktopCookieGeometry = await desktopPage.locator('.cookie-banner').evaluate((panel) => {
+      const rect = panel.getBoundingClientRect();
+      return {
+        position: getComputedStyle(panel).position,
+        rightGap: innerWidth - rect.right,
+        bottomGap: innerHeight - rect.bottom,
+        width: rect.width,
+        viewport: [innerWidth, innerHeight],
+      };
+    });
+    assert.equal(desktopCookieGeometry.position, 'fixed', 'desktop privacy panel is fixed');
+    assert.ok(Math.abs(desktopCookieGeometry.rightGap - 20) <= 1 && Math.abs(desktopCookieGeometry.bottomGap - 20) <= 1, `desktop privacy panel is inset from the lower-right corner: ${JSON.stringify(desktopCookieGeometry)}`);
+    assert.ok(desktopCookieGeometry.width <= 380, 'desktop privacy panel stays within its 380px maximum width');
+    await desktopPage.screenshot({ path: path.join(desktopShotDir, 'home-cookie-banner-1440.png') });
+    const mainTopBeforeClose = await desktopPage.locator('#main').evaluate((main) => main.getBoundingClientRect().top);
+    await desktopPage.getByRole('button', { name: 'Закрити налаштування cookie' }).click();
+    const mainTopAfterClose = await desktopPage.locator('#main').evaluate((main) => main.getBoundingClientRect().top);
+    assert.ok(Math.abs(mainTopBeforeClose - mainTopAfterClose) <= 1, 'closing the fixed privacy panel does not shift main content');
+
+    const primaryBooking = desktopPage.locator('.hero-booking .booking-featured');
+    assert.equal(await primaryBooking.locator('.booking-label').innerText(), 'Записатися на стрижку', 'main booking invitation clearly names the action');
+    assert.equal(await desktopPage.locator('.hero-address').getAttribute('href'), '#contacts', 'visible address navigates to contact details');
+    assert.equal(await desktopPage.locator('.hero-address>span').nth(1).innerText(), await desktopPage.locator('.visit-address').innerText(), 'hero address follows CMS contact data');
+    await assertTextContrast(desktopPage, ['.hero-address', '.booking-featured'], 'hero');
+    await desktopPage.waitForFunction(() => getComputedStyle(document.querySelector('.address-pulse')).animationPlayState === 'running');
+    await desktopPage.keyboard.press('Tab');
+    await primaryBooking.focus();
+    assert.equal(await primaryBooking.evaluate(element => element.matches(':focus-visible')), true, 'featured booking has a visible keyboard focus');
+    await desktopPage.waitForFunction(() => new DOMMatrix(getComputedStyle(document.querySelector('.hero-booking .booking-arrow>span')).transform).m41 > 10);
+    assert.equal(await primaryBooking.getAttribute('href'), await desktopPage.locator('.header-book').getAttribute('href'), 'featured booking preserves the configured destination');
+    await primaryBooking.evaluate(element => element.blur());
+
+    // Wheel-sized scroll steps ease the artwork; native document scrolling is immediate.
+    const motionSamples = await desktopPage.evaluate(async () => {
+      window.scrollTo({ top: 160, behavior: 'instant' });
+      const samples = [];
+      for (let i = 0; i < 12; i++) {
+        await new Promise(requestAnimationFrame);
+        samples.push(new DOMMatrix(getComputedStyle(document.querySelector('.hero-line')).transform).m41);
+      }
+      return { samples, scrollY, viewport: innerHeight };
+    });
+    assert.equal(motionSamples.scrollY, 160, 'motion does not intercept native document scrolling');
+    const targetTranslation = -18 * 160 / motionSamples.viewport;
+    assert.ok(motionSamples.samples.some(value => value < -0.05 && value > targetTranslation + 0.05), 'headline moves through intermediate positions after a scroll step');
+    await desktopPage.waitForFunction(target => Math.abs(new DOMMatrix(getComputedStyle(document.querySelector('.hero-line')).transform).m41 - target) < 0.01, targetTranslation);
+    const idleWrites = await desktopPage.evaluate(async () => {
+      let writes = 0;
+      const observer = new MutationObserver(records => { writes += records.length; });
+      document.querySelectorAll('[data-scroll-scene],[data-hero-motion]').forEach(element => observer.observe(element, { attributes: true, attributeFilter: ['style'] }));
+      await new Promise(resolve => setTimeout(resolve, 350));
+      observer.disconnect();
+      return writes;
+    });
+    assert.ok(idleWrites <= 2, `settled scroll artwork stops rewriting styles (${idleWrites} writes)`);
+
+    const pickerButtons = desktopPage.locator('.visit-options button');
+    assert.equal(await pickerButtons.count(), 3, 'homepage visit picker contains the seeded featured services');
+    const homepageURL = desktopPage.url();
+    const expectedBookingURL = await desktopPage.locator('.header-book').getAttribute('href');
+    const chooseService = async (index, key, expectedPrice, expectedDuration) => {
+      const option = pickerButtons.nth(index);
+      await option.focus();
+      await desktopPage.keyboard.press(key);
+      await desktopPage.waitForFunction((selectedIndex) => document.querySelectorAll('.visit-options button')[selectedIndex]?.getAttribute('aria-pressed') === 'true', index);
+      const summaryText = await desktopPage.locator('#visit-summary').innerText();
+      assert.match(summaryText, new RegExp(`\\b${expectedPrice}\\b`), `service ${index + 1} shows its seeded price`);
+      assert.match(summaryText, new RegExp(`\\b${expectedDuration}\\s*хв`), `service ${index + 1} shows its seeded duration`);
+      assert.equal(desktopPage.url(), homepageURL, 'choosing a service does not navigate away');
+      const outgoingLink = desktopPage.locator('#visit-summary .visit-next a');
+      assert.equal(await outgoingLink.getAttribute('href'), expectedBookingURL, 'Altegio link stays exactly at the configured booking URL');
+      assert.equal(await outgoingLink.getAttribute('target'), '_blank', 'Altegio opens separately from the site');
+      assert.match(await desktopPage.locator('.visit-next p').innerText(), /Далі в Altegio обери цю послугу, майстра та час/, 'booking note explains that the service must be selected again in Altegio');
+      await assertNoHorizontalOverflow(desktopPage, 'visit picker at 1440px');
+    };
+    await chooseService(0, 'Enter', 500, 60);
+    await chooseService(1, 'Space', 400, 30);
+    await chooseService(2, 'Space', 850, 60);
+
+    assert.equal(await desktopPage.locator('.visit-questions').count(), 0, 'FAQ removed from homepage');
+
+    const intactHeadline = await desktopPage.locator('.cut-word-text').evaluate(element => ({ text: element.textContent, opacity: getComputedStyle(element).opacity }));
+    assert.equal(intactHeadline.text, 'стрижки.');
+    assert.equal(intactHeadline.opacity, '1', 'headline resolves to an intact visible word');
+    const halfOpacities = await desktopPage.locator('.cut-half').evaluateAll(elements => elements.map(element => getComputedStyle(element).opacity));
+    assert.ok(halfOpacities.every(opacity => opacity === '0'), 'decorative headline halves disappear after the entrance');
+
+    const waitForMotionFrame = () => desktopPage.evaluate(() => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+    const scrollAndReadClipper = async (top) => {
+      await desktopPage.evaluate((scrollTop) => window.scrollTo({ top: scrollTop, behavior: 'instant' }), top);
+      await waitForMotionFrame();
+      return desktopPage.locator('.clipper-turn').evaluate((element) => getComputedStyle(element).transform);
+    };
+    const experienceTop = await desktopPage.locator('#experience').evaluate((section) => section.offsetTop);
+    const clipperAtTop = await scrollAndReadClipper(0);
+    const clipperAtExperience = await scrollAndReadClipper(experienceTop);
+    assert.notEqual(clipperAtTop, clipperAtExperience, 'scrolling changes the clipper composition');
+    await desktopPage.waitForFunction(() => document.querySelector('.craft-section .experience-copy h2')?.classList.contains('is-visible'));
+    assert.ok(await desktopPage.locator('.craft-section .experience-copy h2').isVisible(), 'experience heading reveals after scrolling into view');
+    await desktopPage.getByRole('button', { name: 'Зупинити анімації' }).click();
+    const pausedClipperAtTop = await scrollAndReadClipper(0);
+    const pausedClipperAtExperience = await scrollAndReadClipper(experienceTop);
+    assert.equal(pausedClipperAtTop, pausedClipperAtExperience, 'the clipper freezes across scroll positions when motion is paused');
+    assert.equal(await desktopPage.locator('.address-pulse').evaluate(element => getComputedStyle(element).animationName), 'none', 'address pulse honors the motion pause control');
+    await desktopPage.getByRole('button', { name: 'Відновити анімації' }).click();
+    await desktopPage.emulateMedia({ reducedMotion: 'reduce' });
+    const reducedClipperAtTop = await scrollAndReadClipper(0);
+    const reducedClipperAtExperience = await scrollAndReadClipper(experienceTop);
+    assert.equal(reducedClipperAtTop, reducedClipperAtExperience, 'the clipper stays still across scroll positions with reduced motion');
+    assert.equal(await desktopPage.locator('.address-pulse').evaluate(element => getComputedStyle(element).animationName), 'none', 'address pulse honors reduced motion');
+    await primaryBooking.focus();
+    assert.equal(await desktopPage.locator('.hero-booking .booking-arrow>span').evaluate(element => getComputedStyle(element).transform), 'none', 'featured booking arrow stays still with reduced motion');
+    await desktopPage.emulateMedia({ reducedMotion: 'no-preference' });
+
+    const noScriptContext = await browser.newContext({ javaScriptEnabled: false, viewport: { width: 1440, height: 900 } });
+    const noScriptPage = await noScriptContext.newPage();
+    await noScriptPage.goto(baseURL, { waitUntil: 'networkidle' });
+    await noScriptPage.getByRole('heading', { name: 'Чоловічі стрижки. Догляд за бородою.' }).waitFor();
+    assert.equal(await noScriptPage.locator('.cookie-banner').count(), 0, 'without JavaScript no undismissable consent overlay blocks the site');
+    assert.equal(await noScriptPage.locator('.hero-booking .button').getAttribute('href'), expectedBookingURL, 'booking remains a normal link without JavaScript');
+    assert.equal(await noScriptPage.locator('.home-person').count(), 5, 'real team stays server rendered without JavaScript');
+    await readReviews(noScriptPage, 3, 'no-JavaScript desktop');
+    assert.equal(await noScriptPage.locator('.reveal-pending').count(), 0, 'no content is hidden awaiting JavaScript reveals');
+    assert.match(await noScriptPage.locator('.visit-options').innerText(), /500/, 'service prices remain readable without JavaScript');
+    assert.equal(await noScriptPage.locator('.visit-all').getAttribute('href'), '/services', 'no-JavaScript service menu fallback is available');
+    await assertNoHorizontalOverflow(noScriptPage, 'home without JavaScript');
+    await noScriptContext.close();
+
     const context = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
     const page = await context.newPage();
     const pageErrors = [];
     page.on('pageerror', (error) => pageErrors.push(error.message));
 
     await page.goto(baseURL, { waitUntil: 'networkidle' });
+    await page.waitForFunction(() => getComputedStyle(document.querySelector('.cut-word-text')).opacity === '1');
+    await readReviews(page, 1, 'mobile');
     await assertNoHorizontalOverflow(page, '/');
+    const mobileBookingGeometry = await page.locator('.hero-booking .button').evaluate(element => {
+      const rect = element.getBoundingClientRect();
+      return { width: rect.width, height: rect.height, left: rect.left, right: rect.right, viewport: innerWidth, fits: element.scrollWidth <= element.clientWidth };
+    });
+    assert.ok(mobileBookingGeometry.height >= 64 && mobileBookingGeometry.width >= 280 && mobileBookingGeometry.fits, `mobile primary booking remains large and readable: ${JSON.stringify(mobileBookingGeometry)}`);
     const screenshotDir = path.join(repoRoot, 'verification', 'accessibility');
     await mkdir(screenshotDir, { recursive: true });
-    await page.locator('.cookie-banner').scrollIntoViewIfNeeded();
+    const mobileCookieGeometry = await page.locator('.cookie-banner').evaluate((panel) => {
+      const rect = panel.getBoundingClientRect();
+      const booking = document.querySelector('.mobile-book')?.getBoundingClientRect();
+      return {
+        position: getComputedStyle(panel).position,
+        rect: { left: rect.left, right: rect.right, top: rect.top, bottom: rect.bottom },
+        viewport: { width: innerWidth, height: innerHeight },
+        bookingTop: booking?.top ?? Infinity,
+      };
+    });
+    assert.equal(mobileCookieGeometry.position, 'fixed', 'mobile privacy panel is fixed');
+    assert.ok(mobileCookieGeometry.rect.left >= 0 && mobileCookieGeometry.rect.right <= mobileCookieGeometry.viewport.width && mobileCookieGeometry.rect.top >= 0 && mobileCookieGeometry.rect.bottom <= mobileCookieGeometry.viewport.height, `mobile privacy panel stays in the viewport: ${JSON.stringify(mobileCookieGeometry)}`);
+    assert.ok(mobileCookieGeometry.rect.bottom <= mobileCookieGeometry.bookingTop, `mobile privacy panel sits above the booking bar: ${JSON.stringify(mobileCookieGeometry)}`);
     await page.screenshot({ path: path.join(screenshotDir, 'home-cookie-banner-390.png') });
     await page.keyboard.press('Tab');
     assert.equal(await page.evaluate(() => document.activeElement?.className), 'skip-link', 'first Tab reaches the visible skip link');
@@ -182,8 +366,12 @@ async function main() {
     const homeImages = await page.locator('img').evaluateAll((images) => images.map((image) => ({ src: image.getAttribute('src'), hasAlt: image.hasAttribute('alt') })));
     assert.ok(homeImages.length > 0, 'home page renders supplied images');
     assert.ok(homeImages.every((image) => image.hasAlt), `every image declares alt text (missing: ${homeImages.filter((image) => !image.hasAlt).map((image) => image.src).join(', ')})`);
-    await assertTextContrast(page, ['.experience-stage-caption', '.review-rating strong span', '.review-rating small', '.cookie-banner p', '.cookie-actions button'], 'home');
-
+    await page.getByRole('heading', { name: 'Чоловічі стрижки. Догляд за бородою.' }).waitFor();
+    assert.equal(await page.locator('.cut-hero img[src*="generated"]').count(), 0, 'mobile homepage hero contains no generated images');
+    assert.equal(await page.locator('.tool-field').count(), 0, 'mobile homepage has no generated barber-tool fields');
+    await assertTextContrast(page, ['.experience-stage-caption', '.review-rating strong span', '.review-rating small', '.cookie-banner p', '.cookie-actions button', '.cookie-close'], 'home');
+    await page.locator('.visit-picker').scrollIntoViewIfNeeded();
+    await assertNoHorizontalOverflow(page, 'visit picker at 390px');
     await page.goto(`${baseURL}/services`, { waitUntil: 'networkidle' });
     await assertTextContrast(page, ['.row-number'], 'services');
     await page.goto(`${baseURL}/team`, { waitUntil: 'networkidle' });
@@ -253,17 +441,24 @@ async function main() {
     const animationDuration = await page.locator('.kinetic-line').first().evaluate((element) => getComputedStyle(element).animationDuration);
     assert.ok(animationDuration.split(',').every((duration) => Number.parseFloat(duration) === 0), `reduced-motion disables CSS animation (got ${animationDuration})`);
     assert.deepEqual(pageErrors, [], `no browser errors: ${pageErrors.join('; ')}`);
+    assert.deepEqual(desktopErrors, [], `no desktop browser errors: ${desktopErrors.join('; ')}`);
     console.log(JSON.stringify({
       status: 'passed',
       checks: [
         'skip-link focus', 'mobile menu first-link focus, Escape return, 24px targets, and 3:1 focus ring',
         'image alt attributes', 'public/admin/cookie text contrast >= 4.5:1',
         'reject/persist/reload, no pre-consent Google request, consent-gated map, and revocation',
-        'motion pause/resume and prefers-reduced-motion',
+        'keyboard service selection shows seeded price/time without navigation and retains the configured booking URL',
+        'FAQ removed; service chooser fits at 390px/1440px',
+        'full review copy remains unclipped in three-column desktop and single-column mobile layouts',
+        'intact final headline and server-rendered booking/prices/team/reviews without JavaScript',
+        'CMS address, readable featured booking, keyboard hover treatment and reduced-motion fallback',
+        'scroll transforms interpolate after native scrolling and stop writing styles when settled',
+        'clipper scroll motion changes and freezes when paused/reduced; motion pause/resume control',
         'no horizontal overflow at 390px on home, contacts, and legal pages',
       ],
       pages: ['/', '/services', '/team', '/contacts', '/admin', '/privacy', '/terms', '/cookies', '/licenses'],
-      screenshots: ['verification/accessibility/home-cookie-banner-390.png', 'verification/accessibility/contacts-map-placeholder-390.png'],
+      screenshots: ['verification/accessibility/home-cookie-banner-1440.png', 'verification/accessibility/home-cookie-banner-390.png', 'verification/accessibility/contacts-map-placeholder-390.png'],
       isolatedData: true,
     }, null, 2));
     await context.close();

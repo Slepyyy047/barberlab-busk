@@ -9,6 +9,7 @@ let cachedConsent: Consent | null = null;
 let temporaryConsent: Consent | null = null;
 let useTemporary = false;
 const subscribers = new Set<() => void>();
+const subscribeToClient = () => () => {};
 function notify() { for (const callback of subscribers) callback(); }
 function snapshot(): Consent | null {
   if (useTemporary) return temporaryConsent;
@@ -45,6 +46,8 @@ const Context = createContext<{ externalMedia: boolean; openSettings: () => void
 export function useCookiePreferences() { return useContext(Context); }
 
 export default function CookiePreferences({ navigation, children }: { navigation: React.ReactNode; children: React.ReactNode }) {
+  // Without JavaScript the map cannot load; don't show an undismissable consent overlay.
+  const clientReady = useSyncExternalStore(subscribeToClient, () => true, () => false);
   const consent = useSyncExternalStore(subscribe, snapshot, () => null);
   const [requested, setRequested] = useState(false);
   const [dismissed, setDismissed] = useState(false);
@@ -53,7 +56,7 @@ export default function CookiePreferences({ navigation, children }: { navigation
   const [notice, setNotice] = useState('');
   const panel = useRef<HTMLElement>(null);
   const trigger = useRef<HTMLElement | null>(null);
-  const visible = requested || (!consent && !dismissed);
+  const visible = clientReady && (requested || (!consent && !dismissed));
 
   const openSettings = () => {
     trigger.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
@@ -61,7 +64,7 @@ export default function CookiePreferences({ navigation, children }: { navigation
     setEditing(true); setRequested(true); setDismissed(false);
   };
   useEffect(() => {
-    if (requested) { panel.current?.scrollIntoView({ block: 'start', behavior: 'instant' }); panel.current?.focus({ preventScroll: true }); }
+    if (requested) panel.current?.focus({ preventScroll: true });
   }, [requested]);
   const close = () => {
     setRequested(false); setDismissed(true); setEditing(false);
@@ -78,10 +81,13 @@ export default function CookiePreferences({ navigation, children }: { navigation
     {navigation}
     {visible && <section ref={panel} tabIndex={-1} className="cookie-banner" aria-labelledby="cookie-title"
       onKeyDown={event => { if (event.key === 'Escape') { event.preventDefault(); close(); } }}>
-      <div className="container">
-        <h2 id="cookie-title">Твій вибір приватності</h2>
-        <p>Необхідна cookie використовується лише для входу адміністратора. Google-карта є необов’язковою: вона може передавати дані Google та використовувати його cookies. Аналітики й реклами тут немає.</p>
-        <p><Link href="/cookies">Про cookie</Link> · <Link href="/privacy">Конфіденційність</Link>. Відмова не заважає переглядати сайт чи записуватися.</p>
+      <div className="cookie-panel-content">
+        <div className="cookie-panel-heading">
+          <h2 id="cookie-title">Трохи про cookie</h2>
+          <button className="cookie-close" type="button" onClick={close} aria-label="Закрити налаштування cookie">×</button>
+        </div>
+        <p>Дозволити Google-карту? Решта сайту й запис працюють без неї.</p>
+        <p><Link href="/cookies">Про cookie</Link> · <Link href="/privacy">Приватність</Link></p>
         {editing && <fieldset><legend>Що дозволити</legend>
           <p>Необхідні функції — завжди активні; вони не використовуються для реклами.</p>
           <label className="consent-option"><input type="checkbox" checked={externalMedia} onChange={event => setExternalMedia(event.target.checked)} /> Зовнішній контент: Google-карта</label>
@@ -90,7 +96,7 @@ export default function CookiePreferences({ navigation, children }: { navigation
           <button type="button" onClick={() => choose(false)}>Лише необхідні</button>
           <button type="button" onClick={() => choose(true)}>Дозволити карту</button>
           {editing ? <button type="button" onClick={() => choose(externalMedia)}>Зберегти вибір</button>
-            : <button type="button" onClick={() => { setExternalMedia(consent?.externalMedia ?? false); setEditing(true); }}>Налаштувати</button>}
+            : <button className="cookie-customize" type="button" onClick={() => { setExternalMedia(consent?.externalMedia ?? false); setEditing(true); }}>Налаштувати</button>}
         </div>
       </div>
     </section>}

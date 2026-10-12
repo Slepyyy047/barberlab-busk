@@ -3,8 +3,13 @@ import { constants } from 'node:fs';
 import path from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
 import { validateContent } from './validation';
+import hostedContent from './hosted-content.json';
 
 export async function checkHealth(dataDir = process.env.BARBERLAB_DATA_DIR || path.join(process.cwd(), 'data')): Promise<void> {
+  if (process.env.VERCEL) {
+    validateContent(hostedContent);
+    return;
+  }
   // A health probe must not provision a database or apply schema changes.
   const db = new DatabaseSync(path.join(dataDir, 'barberlab.sqlite'), { readOnly: true });
   try {

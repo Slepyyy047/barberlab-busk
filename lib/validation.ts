@@ -13,7 +13,7 @@ const list = <T>(value: unknown, label: string, max: number, parse: (item: unkno
 };
 const mediaPath = (value: unknown, label: string): string => {
   const candidate = text(value, label, 220);
-  return /^\/api\/media\/[a-f0-9-]{36}\.webp$/i.test(candidate) ? candidate : fail(`Поле «${label}» має посилатися на завантажене зображення.`);
+  return /^\/(?:api\/media|hosted-media)\/[a-f0-9-]{36}\.webp$/i.test(candidate) ? candidate : fail(`Поле «${label}» має посилатися на завантажене зображення.`);
 };
 const httpsUrl = (value: unknown, label: string, allowEmpty = false): string => {
   if (allowEmpty && value === '') return '';

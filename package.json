@@ -2,6 +2,7 @@
   "name": "barberlab",
   "version": "1.0.0",
   "private": true,
+  "engines": { "node": "24.x" },
   "scripts": {
     "dev": "next dev --hostname 127.0.0.1",
     "build": "next build",

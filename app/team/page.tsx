@@ -32,6 +32,7 @@ export default function Team() {
             <article
               className={`team-card${person.portrait ? '' : ' team-card--no-portrait'}`}
               key={person.id}
+              id={person.id}
               data-reveal
               data-motion="mask"
               data-delay={Math.min(index * 90, 360)}
