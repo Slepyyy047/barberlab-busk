@@ -1,3 +1,4 @@
+import Amenities from '@/components/Amenities';
 import ArrowIcon from '@/components/ArrowIcon';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -43,7 +44,7 @@ export default function Home() {
      <div className="clipper-turn" aria-hidden="true"><Image src="/generated-tools/clipper.png?v=20261010" alt="" width={500} height={500} sizes="(max-width:780px) 280px, 480px" quality={75}/></div>
      <span className="experience-stage-caption">BARBERLAB / Буськ</span><span className="craft-track" aria-hidden="true"><i/></span>
     </div>
-    <div className="experience-copy"><h2 data-reveal data-motion="cut">Стрижки.<br/><span>Борода. Догляд.</span></h2><p data-reveal>Покажи майстру фото стрижки або розкажи, що хочеш змінити.</p><div className="amenity-lines">{s.amenities.slice(0,4).map((a,i)=><span data-reveal data-motion="slide-right" data-delay={i*60} key={a}>{a}</span>)}</div><a className="text-link" href="#team">Обрати майстра <span className="link-arrow" aria-hidden="true"><ArrowIcon direction="down"/></span></a></div>
+    <div className="experience-copy"><h2 data-reveal data-motion="cut">Стрижки.<br/><span>Борода. Догляд.</span></h2><p data-reveal>Покажи майстру фото стрижки або розкажи, що хочеш змінити.</p><Amenities items={s.amenities}/><a className="text-link" href="#team">Обрати майстра <span className="link-arrow" aria-hidden="true"><ArrowIcon direction="down"/></span></a></div>
    </div>
   </section>
   {staff.length>0&&<section id="team" className="team-brief section portrait-section"><div className="container">
