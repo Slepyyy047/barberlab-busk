@@ -1,3 +1,4 @@
+import ArrowIcon from '@/components/ArrowIcon';
 import type { Metadata } from 'next';
 import Image from 'next/image';
 import ToolField from '@/components/ToolField';
@@ -60,7 +61,7 @@ export default function Team() {
                   target="_blank"
                   rel="noopener noreferrer"
                 >
-                  Записатися <span className="link-arrow" aria-hidden="true">↗</span>
+                  Записатися <span className="link-arrow" aria-hidden="true"><ArrowIcon/></span>
                 </a>
               </div>
             </article>

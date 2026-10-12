@@ -1,4 +1,6 @@
 'use client';
+import ArrowIcon from '@/components/ArrowIcon';
+
 
 import { useRef, useState } from 'react';
 import Link from 'next/link';
@@ -32,14 +34,14 @@ export default function VisitPicker({ services, bookingUrl }: { services: Servic
         <span className="visit-option-index" aria-hidden="true">0{index + 1}</span><span className="visit-option-copy"><span>{service.name}</span><small>{money.format(service.price)} ₴ <span aria-hidden="true">/</span> {service.duration} хв</small></span><span className="visit-option-mark" aria-hidden="true">{selectedId === service.id ? '✓' : '+'}</span>
       </button>)}
     </div>
-    <Link href="/services" className="visit-all text-link">Повне меню послуг <span aria-hidden="true">↗</span></Link>
+    <Link href="/services" className="visit-all text-link">Повне меню послуг <span aria-hidden="true"><ArrowIcon/></span></Link>
    </div>
    <div className="visit-summary-shell" ref={summaryRef}>
     <span className="visit-summary-label eyebrow">Обрана послуга</span>
     <div id="visit-summary" className="visit-summary" aria-live="polite" aria-atomic="true">
       {selected ? <div key={selected.id} className="visit-summary-inner">
         <div className="visit-selection"><h4>{selected.name}</h4>{selected.note && <p>{selected.note}</p>}<div className="visit-facts"><strong>{money.format(selected.price)} <span>₴</span></strong><span>{selected.duration} хв</span></div></div>
-        <div className="visit-next"><a className="button" href={bookingUrl} target="_blank" rel="noopener noreferrer">Перейти до запису <span className="link-arrow" aria-hidden="true">↗</span></a><p>Далі в Altegio обери цю послугу, майстра та час. Остаточну ціну уточнюй під час запису.</p></div>
+        <div className="visit-next"><a className="button" href={bookingUrl} target="_blank" rel="noopener noreferrer">Перейти до запису <span className="link-arrow" aria-hidden="true"><ArrowIcon/></span></a><p>Далі в Altegio обери цю послугу, майстра та час. Остаточну ціну уточнюй під час запису.</p></div>
       </div> : <div className="visit-empty"><p>Обери послугу зі списку.</p><noscript><p>Для вибору тут потрібен JavaScript. <Link href="/services">Відкрити послуги та запис</Link>.</p></noscript></div>}
     </div>
    </div>

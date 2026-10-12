@@ -1,9 +1,10 @@
+import ArrowIcon from '@/components/ArrowIcon';
 import Link from 'next/link';
 import type { Settings } from '@/lib/types';
 
 export default function VisitQuestions({ settings }: { settings: Settings }) {
   return <section className="section visit-questions" aria-labelledby="visit-questions-title"><div className="container questions-grid">
-    <div><h2 id="visit-questions-title">Поширені питання</h2><a className="text-link" href={settings.phoneLink}>{settings.phone} <span aria-hidden="true">↗</span></a></div>
+    <div><h2 id="visit-questions-title">Поширені питання</h2><a className="text-link" href={settings.phoneLink}>{settings.phone} <span aria-hidden="true"><ArrowIcon/></span></a></div>
     <div className="question-list">
       <details><summary>Як обрати стрижку?</summary><p>Покажи фото, яке подобається. Якщо не визначився — обговори форму й довжину з майстром.</p></details>
       <details><summary>Скільки коштує стрижка?</summary><p>Ціни й тривалість є в <Link href="/services">меню</Link>. Остаточну ціну та вільний час уточнюй під час запису.</p></details>

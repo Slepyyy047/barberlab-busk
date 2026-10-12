@@ -1,5 +1,6 @@
 'use client';
 
+import ArrowIcon from '@/components/ArrowIcon';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
@@ -137,7 +138,7 @@ export default function Navigation({ bookingUrl }: { bookingUrl: string }) {
         </button>
       </header>
       <a className="mobile-book button" href={bookingUrl} target="_blank" rel="noopener noreferrer">
-        Записатися до BARBERLAB
+        Записатися <ArrowIcon/>
       </a>
     </>
   );

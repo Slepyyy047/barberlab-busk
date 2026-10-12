@@ -3,7 +3,7 @@
 .visit-picker { display:grid; grid-template-columns:1.1fr 1fr; gap:32px; padding:0; margin-bottom:0; scroll-margin-top:110px; }
 .visit-options { display:grid; grid-template-columns:1fr; gap:0; border-top:1px solid #514237; }
 .visit-options button { display:flex; align-items:center; gap:18px; padding:16px 12px; min-height:84px; background:transparent; color:#eee8e2; border:0; border-bottom:1px solid #514237; text-align:left; line-height:1.35; font-size:17px; position:relative; isolation:isolate; }
-.visit-options button:before { content:''; position:absolute; inset:0; background:#d88756; transform:scaleY(0); transform-origin:bottom; transition:transform .5s var(--ease); z-index:-1; }
+.visit-options button:before { content:''; position:absolute; inset:0; background:var(--accent); transform:scaleY(0); transform-origin:bottom; transition:transform .5s var(--ease); z-index:-1; }
 .visit-options button[aria-pressed=true] { color:#101010; }
 .visit-options button[aria-pressed=true]:before { transform:scaleY(1); }
 .visit-option-index { font-size:11px; color:#c0b5ad; align-self:start; padding-top:3px; }

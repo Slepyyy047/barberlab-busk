@@ -1,4 +1,6 @@
 'use client';
+import ArrowIcon from '@/components/ArrowIcon';
+
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { ChangeEvent, FormEvent, ReactNode } from 'react';
@@ -202,9 +204,9 @@ export default function AdminPanel() {
           <label>Ім’я користувача<input autoComplete="username" required value={username} onChange={(event) => setUsername(event.target.value)} /></label>
           <label>Пароль<input type="password" autoComplete="current-password" required value={password} onChange={(event) => setPassword(event.target.value)} /></label>
           {notice && <NoticeView notice={notice} />}
-          <button className="admin-button admin-button-primary" disabled={busy}>{busy ? 'Входимо…' : 'Увійти до кабінету'} <span aria-hidden="true">↗</span></button>
+          <button className="admin-button admin-button-primary" disabled={busy}>{busy ? 'Входимо…' : 'Увійти до кабінету'} <span aria-hidden="true"><ArrowIcon/></span></button>
         </form>
-        <Link className="admin-back" href="/">← На головну</Link>
+        <Link className="admin-back" href="/"><ArrowIcon direction="left"/> На головну</Link>
       </section>
     </div>
   );
@@ -213,14 +215,14 @@ export default function AdminPanel() {
     <div className="admin-shell">
       <header className="admin-topbar">
         <Link className="admin-eyebrow" href="/">BARBERLAB <span>·</span> КАБІНЕТ</Link>
-        <button className="admin-button admin-button-quiet" onClick={logout} disabled={busy}>Вийти ↗</button>
+        <button className="admin-button admin-button-quiet" onClick={logout} disabled={busy}>Вийти <ArrowIcon/></button>
       </header>
       <section className="admin-load-error" aria-live="polite">
         {contentLoading ? <p className="admin-loading">Завантажуємо вміст сайту…</p> : <>
           <p className="admin-kicker">ВМІСТ НЕДОСТУПНИЙ</p>
           <h1>Не вдалося завантажити дані.</h1>
           {notice && <NoticeView notice={notice} />}
-          <button className="admin-button admin-button-primary" onClick={retryContentLoad} disabled={contentLoading}>Спробувати ще раз ↗</button>
+          <button className="admin-button admin-button-primary" onClick={retryContentLoad} disabled={contentLoading}>Спробувати ще раз <ArrowIcon/></button>
         </>}
       </section>
     </div>
@@ -230,7 +232,7 @@ export default function AdminPanel() {
     <div className="admin-shell">
       <header className="admin-topbar">
         <Link className="admin-eyebrow" href="/">BARBERLAB <span>·</span> КАБІНЕТ</Link>
-        <div className="admin-top-actions"><span className={dirty ? 'admin-dirty' : 'admin-clean'}>{dirty ? '● Є незбережені зміни' : '● Усі зміни збережено'}</span><button className="admin-button admin-button-quiet" onClick={logout} disabled={busy}>Вийти ↗</button></div>
+        <div className="admin-top-actions"><span className={dirty ? 'admin-dirty' : 'admin-clean'}>{dirty ? '● Є незбережені зміни' : '● Усі зміни збережено'}</span><button className="admin-button admin-button-quiet" onClick={logout} disabled={busy}>Вийти <ArrowIcon/></button></div>
       </header>
       <div className="admin-layout">
         <aside className="admin-sidebar">
@@ -252,7 +254,7 @@ export default function AdminPanel() {
           {section === 'gallery' && <GalleryEditor content={content} update={updateContent} upload={upload} uploading={uploading} busy={busy} deleteImage={deleteImage} />}
           {section === 'settings' && <SettingsEditor content={content} update={updateContent} />}
           {section === 'reviews' && <ReviewsEditor content={content} update={updateContent} />}
-          <div className="admin-savebar"><span>{dirty ? 'Є зміни, які ще не опубліковано.' : 'Поточна версія опублікована.'}</span><button className="admin-button admin-button-primary" onClick={save} disabled={busy || !contentReady || !dirty}>{busy ? 'Зберігаємо…' : 'Зберегти зміни'} <span aria-hidden="true">↗</span></button></div>
+          <div className="admin-savebar"><span>{dirty ? 'Є зміни, які ще не опубліковано.' : 'Поточна версія опублікована.'}</span><button className="admin-button admin-button-primary" onClick={save} disabled={busy || !contentReady || !dirty}>{busy ? 'Зберігаємо…' : 'Зберегти зміни'} <span aria-hidden="true"><ArrowIcon/></span></button></div>
         </section>
       </div>
     </div>
@@ -300,7 +302,7 @@ function ServicesEditor({ content, update }: { content: Content; update: (fn: (p
     <div className="admin-editor-intro"><p>Ціни та тривалість послуг, які бачать клієнти на сайті.</p><button className="admin-button admin-button-outline" onClick={() => update((previous) => ({ ...previous, services: [...previous.services, blank()] }))}>＋ Додати послугу</button></div>
     {content.services.length === 0 && <p className="admin-empty">Послуг поки немає. Додайте першу.</p>}
     {content.services.map((service, index) => <article className="admin-card" key={service.id}>
-      <div className="admin-card-top"><span className="admin-order">{String(index + 1).padStart(2, '0')}</span><strong>{service.name || 'Нова послуга'}</strong><span className={service.visible ? 'admin-chip' : 'admin-chip muted'}>{service.visible ? 'Опубліковано' : 'Приховано'}</span><div className="admin-row-actions"><button aria-label={`Перемістити ${service.name || 'послугу'} вгору`} disabled={index === 0} onClick={() => shift(index, -1)}>↑</button><button aria-label={`Перемістити ${service.name || 'послугу'} вниз`} disabled={index === content.services.length - 1} onClick={() => shift(index, 1)}>↓</button></div></div>
+      <div className="admin-card-top"><span className="admin-order">{String(index + 1).padStart(2, '0')}</span><strong>{service.name || 'Нова послуга'}</strong><span className={service.visible ? 'admin-chip' : 'admin-chip muted'}>{service.visible ? 'Опубліковано' : 'Приховано'}</span><div className="admin-row-actions"><button aria-label={`Перемістити ${service.name || 'послугу'} вгору`} disabled={index === 0} onClick={() => shift(index, -1)}><ArrowIcon direction="up"/></button><button aria-label={`Перемістити ${service.name || 'послугу'} вниз`} disabled={index === content.services.length - 1} onClick={() => shift(index, 1)}><ArrowIcon direction="down"/></button></div></div>
       <div className="admin-fields"><Field label="Назва"><TextInput required value={service.name} onChange={(name) => patch(service.id, { name })} /></Field><Field label="Категорія"><TextInput required value={service.category} onChange={(category) => patch(service.id, { category })} /></Field><Field label="Ціна, ₴"><TextInput type="number" min="0" required value={service.price} onChange={(raw) => patch(service.id, { price: Number(raw) })} /></Field><Field label="Тривалість, хв"><TextInput type="number" min="1" required value={service.duration} onChange={(raw) => patch(service.id, { duration: Number(raw) })} /></Field><Field label="Примітка" wide><TextInput value={service.note} onChange={(note) => patch(service.id, { note })} /></Field></div>
       <label className="admin-check"><input type="checkbox" checked={service.visible} onChange={(event) => patch(service.id, { visible: event.target.checked })} /> Показувати на сайті</label>
     </article>)}
@@ -326,7 +328,7 @@ function StaffEditor({ content, update, upload, uploading }: { content: Content;
       <div className="admin-portrait">{person.portrait ? <Image src={person.portrait} alt={`Портрет ${person.name}`} width={164} height={164} unoptimized /> : <span>Фото ще не додано</span>}</div>
       <div className="admin-person-fields"><div className="admin-fields"><Field label="Ім’я"><TextInput required value={person.name} onChange={(name) => patch(person.id, { name })} /></Field><Field label="Рівень майстра"><TextInput value={person.level} onChange={(level) => patch(person.id, { level })} /></Field></div><label className="admin-check"><input type="checkbox" checked={person.visible} onChange={(event) => patch(person.id, { visible: event.target.checked })} /> Показувати на сайті</label>
         <label className="admin-button admin-button-outline admin-upload">{uploading ? 'Завантажуємо…' : 'Завантажити портрет'}<input type="file" accept="image/*" onChange={(event) => onPortrait(event, person)} disabled={uploading} /></label>
-      </div><div className="admin-row-actions"><button aria-label={`Перемістити ${person.name || 'майстра'} вгору`} disabled={index === 0} onClick={() => shift(index, -1)}>↑</button><button aria-label={`Перемістити ${person.name || 'майстра'} вниз`} disabled={index === content.staff.length - 1} onClick={() => shift(index, 1)}>↓</button></div>
+      </div><div className="admin-row-actions"><button aria-label={`Перемістити ${person.name || 'майстра'} вгору`} disabled={index === 0} onClick={() => shift(index, -1)}><ArrowIcon direction="up"/></button><button aria-label={`Перемістити ${person.name || 'майстра'} вниз`} disabled={index === content.staff.length - 1} onClick={() => shift(index, 1)}><ArrowIcon direction="down"/></button></div>
     </article>)}
   </div>;
 }
@@ -348,7 +350,7 @@ function GalleryEditor({ content, update, upload, uploading, busy, deleteImage }
   });
   return <div className="admin-editor"><div className="admin-editor-intro"><p>Фотографії простору, робіт та команди.</p><label className="admin-button admin-button-outline admin-upload">{uploading ? 'Завантажуємо…' : '＋ Додати фото'}<input type="file" accept="image/*" multiple onChange={onFiles} disabled={uploading} /></label></div>
     {content.gallery.length === 0 && <p className="admin-empty">Галерея поки порожня. Завантажте перші фото.</p>}
-    <div className="admin-gallery-grid">{content.gallery.map((image, index) => <article className="admin-gallery-card" key={image.id}><div className="admin-gallery-image"><Image src={image.src} alt={image.alt || 'Фото галереї'} width={600} height={400} unoptimized /></div><div className="admin-gallery-fields"><Field label="Опис фото"><TextInput value={image.alt} onChange={(alt) => patch(image.id, { alt })} /></Field><Field label="Категорія"><TextInput value={image.category} onChange={(category) => patch(image.id, { category })} /></Field><label className="admin-check"><input type="checkbox" checked={image.visible} onChange={(event) => patch(image.id, { visible: event.target.checked })} /> Публікувати</label><div className="admin-gallery-actions"><button aria-label="Перемістити фото вгору" disabled={busy || index === 0} onClick={() => shift(index, -1)}>↑</button><button aria-label="Перемістити фото вниз" disabled={busy || index === content.gallery.length - 1} onClick={() => shift(index, 1)}>↓</button><button className="admin-delete" disabled={busy || uploading} onClick={() => deleteImage(image.src)}>Видалити фото</button></div></div></article>)}</div>
+    <div className="admin-gallery-grid">{content.gallery.map((image, index) => <article className="admin-gallery-card" key={image.id}><div className="admin-gallery-image"><Image src={image.src} alt={image.alt || 'Фото галереї'} width={600} height={400} unoptimized /></div><div className="admin-gallery-fields"><Field label="Опис фото"><TextInput value={image.alt} onChange={(alt) => patch(image.id, { alt })} /></Field><Field label="Категорія"><TextInput value={image.category} onChange={(category) => patch(image.id, { category })} /></Field><label className="admin-check"><input type="checkbox" checked={image.visible} onChange={(event) => patch(image.id, { visible: event.target.checked })} /> Публікувати</label><div className="admin-gallery-actions"><button aria-label="Перемістити фото вгору" disabled={busy || index === 0} onClick={() => shift(index, -1)}><ArrowIcon direction="up"/></button><button aria-label="Перемістити фото вниз" disabled={busy || index === content.gallery.length - 1} onClick={() => shift(index, 1)}><ArrowIcon direction="down"/></button><button className="admin-delete" disabled={busy || uploading} onClick={() => deleteImage(image.src)}>Видалити фото</button></div></div></article>)}</div>
   </div>;
 }
 

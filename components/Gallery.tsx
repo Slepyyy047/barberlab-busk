@@ -1,4 +1,6 @@
 'use client';
+import ArrowIcon from '@/components/ArrowIcon';
+
 
 import { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
@@ -72,7 +74,7 @@ export default function Gallery({ images }: { images: GalleryImage[] }) {
             <Image src={image.src} alt={image.alt} width={700} height={800} unoptimized />
             <span>
               <span>{image.alt}</span>
-              <span className="gallery-arrow" aria-hidden="true">↗</span>
+              <span className="gallery-arrow" aria-hidden="true"><ArrowIcon/></span>
             </span>
           </button>
         ))}
@@ -115,11 +117,11 @@ export default function Gallery({ images }: { images: GalleryImage[] }) {
           <p>{shown[index]?.alt}</p>
           <div className="viewer-controls">
             <button type="button" onClick={() => move(-1)} aria-label="Попереднє фото">
-              Попереднє <span aria-hidden="true">←</span>
+              Попереднє <span aria-hidden="true"><ArrowIcon direction="left"/></span>
             </button>
             <span>{shown.length ? `${index + 1} / ${shown.length}` : '0 / 0'}</span>
             <button type="button" onClick={() => move(1)} aria-label="Наступне фото">
-              Наступне <span aria-hidden="true">→</span>
+              Наступне <span aria-hidden="true"><ArrowIcon direction="right"/></span>
             </button>
           </div>
         </div>

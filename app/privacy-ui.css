@@ -12,7 +12,7 @@
 .cookie-actions button:hover { background:#393939; }
 .cookie-banner fieldset { border:1px solid #aaa; padding:16px; margin:18px 0; max-width:900px; }
 .consent-option { display:flex; align-items:center; gap:12px; min-height:44px; color:#f0efec; cursor:pointer; }
-.consent-option input { width:22px; height:22px; accent-color:#d88756; }
+.consent-option input { width:22px; height:22px; accent-color:var(--accent); }
 .map-panel { height:auto; min-height:410px; }
 .footer-legal { display:flex; flex-wrap:wrap; gap:12px 24px; padding-top:24px; font-size:13px; }
 .footer-legal a,.footer-preference { padding:8px 0; min-height:36px; }
