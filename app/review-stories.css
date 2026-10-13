@@ -12,7 +12,7 @@
 .review-stories__card {
   min-width: 0;
   padding: 20px 22px;
-  border: 1px solid #34302c;
+  border: 1px solid #313131;
   background: #121212;
 }
 
@@ -27,7 +27,7 @@
 
 .review-stories__card p {
   margin: 0;
-  color: #e5e1dc;
+  color: #e1e1e1;
   font-size: 16px;
   font-weight: 400;
   letter-spacing: 0;
@@ -36,7 +36,7 @@
 }
 
 .review-stories__card cite {
-  color: #c9b7a8;
+  color: #bababa;
   font-size: 13px;
   font-style: normal;
   font-weight: 600;

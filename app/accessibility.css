@@ -1,4 +1,4 @@
-/* Keep the supplied charcoal and copper palette; raise metadata contrast only. */
+/* Readable secondary text on the monochrome public surfaces. */
 .kinetic-caption > span,
 .experience-stage-caption,
 .row-number,
@@ -11,19 +11,19 @@
 .team-level,
 .team-card--no-portrait .team-portrait,
 .about-points p {
-  color: #c0b5ad;
+  color: #b7b7b7;
 }
 
-.contact-details h2 { color: #c9b7a9; }
+.contact-details h2 { color: #bababa; }
 
 /* Keyboard focus remains distinct over both dark public surfaces and the light CMS. */
 :focus-visible {
-  outline: 3px solid #f0a778;
+  outline: 3px solid #b3b3b3;
   outline-offset: 4px;
 }
 
 .admin-shell :focus-visible {
-  outline-color: #303f66;
+  outline-color: #3f3f3f;
 }
 
 @media (max-width: 780px) {

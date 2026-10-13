@@ -4,10 +4,11 @@
 
 ## Шрифти
 
-- **Manrope** — використовується з локальних файлів `public/fonts/font-0.ttf` та `font-2.ttf`, `font-3.ttf` (інші файли сімейства також присутні в каталозі). Copyright notice у ліцензійному файлі: © 2018 The Manrope Project Authors. SIL Open Font License 1.1. Копія ліцензії: [`public/fonts/Manrope-OFL.txt`](public/fonts/Manrope-OFL.txt). Відомості про проєкт: <https://github.com/googlefonts/manrope>.
-- **Oswald** — використовується з локального `public/fonts/font-6.ttf` (інші файли сімейства також присутні в каталозі). Copyright notice у ліцензійному файлі: © 2016 The Oswald Project Authors. SIL Open Font License 1.1. Копія ліцензії: [`public/fonts/Oswald-OFL.txt`](public/fonts/Oswald-OFL.txt). Відомості про проєкт: <https://github.com/googlefonts/OswaldFont>.
+- **Onest** — основний шрифт інтерфейсу та заголовків, локальний variable-файл `public/fonts/Onest-Variable.ttf` (вага 100–900, з кирилицею). Copyright 2021 The Onest Project Authors. SIL Open Font License 1.1; копія: [`public/fonts/Onest-OFL.txt`](public/fonts/Onest-OFL.txt). Джерело файлу: <https://github.com/google/fonts/tree/main/ofl/onest>, проєкт: <https://github.com/simpals/onest>. Завантажено 2026-10-13; файл шрифту не змінювався.
+- **Manrope** — збережений шрифт попереднього оформлення з локальних файлів `public/fonts/font-0.ttf` та `font-2.ttf`, `font-3.ttf` (інші файли сімейства також присутні в каталозі). Copyright notice у ліцензійному файлі: © 2018 The Manrope Project Authors. SIL Open Font License 1.1. Копія ліцензії: [`public/fonts/Manrope-OFL.txt`](public/fonts/Manrope-OFL.txt). Відомості про проєкт: <https://github.com/googlefonts/manrope>.
+- **Oswald** — збережений шрифт попереднього оформлення з локального `public/fonts/font-6.ttf` (інші файли сімейства також присутні в каталозі). Copyright notice у ліцензійному файлі: © 2016 The Oswald Project Authors. SIL Open Font License 1.1. Копія ліцензії: [`public/fonts/Oswald-OFL.txt`](public/fonts/Oswald-OFL.txt). Відомості про проєкт: <https://github.com/googlefonts/OswaldFont>.
 
-Копії повних текстів OFL збережені поруч зі шрифтами. Застосовуйте умови обох ліцензій до відповідних файлів шрифтів; самі шрифтові файли не продаються окремо.
+Копії повних текстів OFL збережені поруч зі шрифтами. Застосовуйте умови відповідних ліцензій до відповідних файлів шрифтів; самі шрифтові файли не продаються окремо.
 
 ## Бренд, логотип і графіка
 

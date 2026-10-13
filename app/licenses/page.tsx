@@ -15,7 +15,8 @@ export default function Licenses() {
     <section className="section legal-page"><article className="container legal-content">
       <p className="eyebrow">BARBERLAB / ЛІЦЕНЗІЇ ТА АКТИВИ</p>
       <h2>Шрифти</h2>
-      <p>Локальні файли шрифтів Manrope і Oswald поширюються за <a href="https://openfontlicense.org/" target="_blank" rel="noopener noreferrer">SIL Open Font License 1.1</a>. Разом зі шрифтами збережені копії ліцензії: <a href="/fonts/Manrope-OFL.txt">Manrope-OFL.txt</a> та <a href="/fonts/Oswald-OFL.txt">Oswald-OFL.txt</a>. Файли шрифтів містяться у каталозі <code>public/fonts/</code>.
+      <p>Основний шрифт сайту — <a href="https://github.com/simpals/onest" target="_blank" rel="noopener noreferrer">Onest</a>, © 2021 The Onest Project Authors. Він завантажується з нашого сайту й поширюється за SIL Open Font License 1.1. <a href="/fonts/Onest-OFL.txt">Повний текст ліцензії Onest</a>.</p>
+      <p>Збережені файли попередніх шрифтів Manrope і Oswald поширюються за <a href="https://openfontlicense.org/" target="_blank" rel="noopener noreferrer">SIL Open Font License 1.1</a>. Разом зі шрифтами збережені копії ліцензії: <a href="/fonts/Manrope-OFL.txt">Manrope-OFL.txt</a> та <a href="/fonts/Oswald-OFL.txt">Oswald-OFL.txt</a>. Файли шрифтів містяться у каталозі <code>public/fonts/</code>.
       </p>
       <p>Зазначені у файлах ліцензії відомості: © 2018 The Manrope Project Authors (<a href="https://github.com/googlefonts/manrope" target="_blank" rel="noopener noreferrer">проєкт Manrope</a>) та © 2016 The Oswald Project Authors (<a href="https://github.com/googlefonts/OswaldFont" target="_blank" rel="noopener noreferrer">проєкт Oswald</a>). Умови OFL дозволяють вбудовувати та поширювати шрифти разом із програмним забезпеченням за умови дотримання ліцензії; її текст треба зберігати.
       </p>
