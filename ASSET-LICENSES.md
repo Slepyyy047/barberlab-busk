@@ -4,7 +4,9 @@
 
 ## Шрифти
 
-- **Onest** — основний шрифт інтерфейсу та заголовків, локальний variable-файл `public/fonts/Onest-Variable.ttf` (вага 100–900, з кирилицею). Copyright 2021 The Onest Project Authors. SIL Open Font License 1.1; копія: [`public/fonts/Onest-OFL.txt`](public/fonts/Onest-OFL.txt). Джерело файлу: <https://github.com/google/fonts/tree/main/ofl/onest>, проєкт: <https://github.com/simpals/onest>. Завантажено 2026-10-13; файл шрифту не змінювався.
+- **Source Sans 3** — основний шрифт тексту й заголовків; локальний variable-файл `public/fonts/SourceSans3-Variable.woff2`, вага 200–900. Copyright 2010–2024 Adobe, Reserved Font Name Source. SIL Open Font License 1.1, копія: [`public/fonts/SourceSans3-OFL.txt`](public/fonts/SourceSans3-OFL.txt). Джерело: <https://github.com/adobe-fonts/source-sans/tree/release/WOFF2/VF>. Завантажено 2026-10-13 без модифікації.
+
+- **Onest** — збережений шрифт попереднього оформлення, локальний variable-файл `public/fonts/Onest-Variable.ttf` (вага 100–900, з кирилицею). Copyright 2021 The Onest Project Authors. SIL Open Font License 1.1; копія: [`public/fonts/Onest-OFL.txt`](public/fonts/Onest-OFL.txt). Джерело файлу: <https://github.com/google/fonts/tree/main/ofl/onest>, проєкт: <https://github.com/simpals/onest>. Завантажено 2026-10-13; файл шрифту не змінювався.
 - **Manrope** — збережений шрифт попереднього оформлення з локальних файлів `public/fonts/font-0.ttf` та `font-2.ttf`, `font-3.ttf` (інші файли сімейства також присутні в каталозі). Copyright notice у ліцензійному файлі: © 2018 The Manrope Project Authors. SIL Open Font License 1.1. Копія ліцензії: [`public/fonts/Manrope-OFL.txt`](public/fonts/Manrope-OFL.txt). Відомості про проєкт: <https://github.com/googlefonts/manrope>.
 - **Oswald** — збережений шрифт попереднього оформлення з локального `public/fonts/font-6.ttf` (інші файли сімейства також присутні в каталозі). Copyright notice у ліцензійному файлі: © 2016 The Oswald Project Authors. SIL Open Font License 1.1. Копія ліцензії: [`public/fonts/Oswald-OFL.txt`](public/fonts/Oswald-OFL.txt). Відомості про проєкт: <https://github.com/googlefonts/OswaldFont>.
 
